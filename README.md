@@ -6,7 +6,6 @@ This plugin is very early in its lifecycle. There is **lots** of opportunity for
 
 At a high level, this is current status and near-term plans for the plugin. See below for details/
 - 64 bit builds only on all platforms. No current plans for 32 bit builds
-- Tested using OpenSSL 1.1.1g or 1.1.1h and SqlCipher Community Edition v4.4.0 (Sqlite 3.31) 
 - Windows builds are working
     - Visual Studio 2019 Community Edition
     - Mingw64 using MSYS2 and a variety of installed MSYS2 packages
@@ -21,6 +20,15 @@ At a high level, this is current status and near-term plans for the plugin. See 
 - Publishing in the Gradle plugin repository under name `sqlcipher-openssl-build` 
 - First release tag will be committed once all Windows hosted builds and all Linux hosted builds are working. Mac OS support will be later. The tag will be identified as alpha and will be published to the Gradle Plugin repo.
 - Android configuration - easy add of extra source files (JNI wrappers) to standard library  
+
+#### Tested Version Combinations
+The plugin successfully performs 64 bit builds of these combinations.  Others may work. Note that the Sqlite version is listed only for information, it is determined by the SqlCipher version.
+
+| OpenSSL version   | SqlCipher version     | Sqlite Version        |
+|-------------------|-----------------------|-----------------------
+| 1.1.g             | 4.4.0                 | 3.31.0                |
+| 1.1.h             | 4.4.0                 | 3.31.0                |
+| 1.1.h             | 4.4.1                 | 3.33.0                |
     
 ## OpenSSL
 *From the OpenSSL site:*
@@ -133,7 +141,8 @@ The samples below use the kotlin gradle DSL syntax, but configurations is curren
 Use the plugins DSL in build.gradle.kts to declare enable the plugin:
 ```
     plugins {
-        id("com.oldguy.sqlcipher")
+            ...
+            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.1.0"
     }
 ```
 

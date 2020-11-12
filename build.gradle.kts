@@ -36,11 +36,19 @@ tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
 }
 
+pluginBundle {
+    website = "https://github.com/skolson/sqlcipher-openssl-build"
+    vcsUrl = "https://github.com/skolson/sqlcipher-openssl-build.git"
+    tags = listOf("openssl", "sqlcipher")
+}
+
 gradlePlugin {
     plugins {
         create(artifactName) {
             // This ID is used by the dependent projects in the plugins block
-            id = artifactName
+            id = "$groupName.$artifactName"
+            displayName = "OpenSSL and SqlCipher builds"
+            description = "Automated builds of OpenSSL and SqlCipher, 64 bit only, for Windows and Linux build hosts. Multiple target hosts including Android, VStudio, mingw, Linux."
             implementationClass = "com.oldguy.gradle.SqlCipherPlugin"
         }
     }
