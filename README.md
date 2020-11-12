@@ -142,7 +142,7 @@ Use the plugins DSL in build.gradle.kts to declare enable the plugin:
 ```
     plugins {
             ...
-            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.1.0"
+            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.1.1"
     }
 ```
 
