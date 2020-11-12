@@ -136,7 +136,7 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String): BuilderT
     }
 
     companion object {
-        val androidTargets = listOf("android64-aarch64", "android64-x86_64")
+        val androidTargets = listOf("android-arm64", "android64-x86_64")
         // use ./Configure LIST to find these
     }
 }
