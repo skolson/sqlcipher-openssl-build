@@ -144,7 +144,8 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
             opensslLibDir,
             compilerOptionsString,
             androidNdkRoot.get(),
-            androidNdkPath)
+            androidNdkPath,
+            r22OrLater)
         runner.copyResults(builder.outputDir, targetDir, listOf("*.so"))
         runner.copyResults(srcDir, targetDir, listOf("sqlite3.h"))
     }

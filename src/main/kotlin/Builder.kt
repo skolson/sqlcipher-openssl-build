@@ -150,6 +150,9 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
     abstract val gitUri: String
     abstract val gitTagName: String
     abstract val downloadUrl: URL
+    abstract var extractTask: TaskProvider<out ExtractArchiveTask>
+    abstract var gitTask: TaskProvider<out GitCheckoutTask>
+    abstract var downloadTask: TaskProvider<out DownloadArchiveTask>
 
     fun createTargetsDirectory(targetsName: String, buildName: String): File {
         val targetsDir = target.buildDir.resolve(targetsName)
@@ -166,17 +169,9 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
             "$fileName$linuxArchiveSuffix"
     }
 
-    private fun registerGitTask(): TaskProvider<GitCheckoutTask> {
-        return target.tasks.register("${buildName}Git", GitCheckoutTask::class.java)
-    }
-
-    private fun registerDownloadTask(): TaskProvider<DownloadArchiveTask> {
-        return target.tasks.register("${buildName}Download", DownloadArchiveTask::class.java)
-    }
-
-    private fun registerExtractTask(): TaskProvider<ExtractArchiveTask> {
-        return target.tasks.register("${buildName}Extract", ExtractArchiveTask::class.java)
-    }
+    abstract fun registerDownloadTask()
+    abstract fun registerGitTask()
+    abstract fun registerExtractTask()
 
     /**
      * Registers the download, extract, and git related source tasks.  The result of these tasks is a populated source
@@ -188,9 +183,8 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
      */
     fun registerSourceTasks(downloadFile: (() -> File),
                             compileDirectory: (() -> File),
-                            vararg dependencies: TaskProvider<Task>)
-            : Pair<TaskProvider<GitCheckoutTask>, TaskProvider<ExtractArchiveTask>> {
-        val downloadTask = registerDownloadTask()
+                            vararg dependencies: TaskProvider<Task>) {
+        registerDownloadTask()
         downloadTask.configure {
             if (dependencies.isNotEmpty())
                 it.dependsOn(*dependencies)
@@ -199,7 +193,7 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
             }
             it.setup(downloadUrl, downloadFile())
         }
-        val extractTask = registerExtractTask()
+        registerExtractTask()
         extractTask.configure {
             it.dependsOn(downloadTask)
             it.onlyIf {
@@ -207,7 +201,7 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
             }
             it.setup(downloadTask.get().downloadFile.get().asFile, compileDirectory())
         }
-        val gitTask = registerGitTask()
+        registerGitTask()
         gitTask.configure {
             if (dependencies.isNotEmpty())
                 it.dependsOn(*dependencies)
@@ -216,7 +210,6 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
             }
             it.setup(gitUri, gitTagName, compileDirectory())
         }
-        return Pair(gitTask, extractTask)
     }
 
     fun makeRunner(): Runner {

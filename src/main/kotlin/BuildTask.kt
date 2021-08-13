@@ -1,21 +1,19 @@
 package com.oldguy.gradle
 
-import groovy.lang.Closure
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.Task
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import java.io.File
 
-abstract class BuilderTask(val buildType: String): DefaultTask() {
-    abstract val buildName: String
+abstract class BuilderTask(@get:Input val buildType: String): DefaultTask() {
     private val groupName = "build"
-    val host = HostOs.query()
-    val windowsPatterns = listOf("*.lib", "*.dll", "*.exe")
-    val mingwPatterns = listOf("*.a", "*.dll", "*.pc", "*.rc", "*.def", "*.o")
-    val linuxPatterns = listOf("sqlcipher", "*.a", "*.so", "*.pc", "*.map", "*.so.*")
-    val make = "make"
+
+    @get:Input
+    abstract val buildName: String
+
+    @get:Input
     val defaultFileName get() = "${buildName}-${buildType}"
 
     @get:Input
@@ -32,9 +30,26 @@ abstract class BuilderTask(val buildType: String): DefaultTask() {
 
     @get:Input
     abstract val androidNdkRoot: Property<File>
-    val androidNdkPath get() = androidNdkPath(host, buildType)
 
+    @get:Input
+    abstract var r22OrLater: Boolean
+
+    @get:Input
+    val androidNdkPath get() = androidNdkPath(host, buildType, r22OrLater)
+
+    @Internal
+    val host = HostOs.query()
+    @Internal
+    val windowsPatterns = listOf("*.lib", "*.dll", "*.exe")
+    @Internal
+    val mingwPatterns = listOf("*.a", "*.dll", "*.pc", "*.rc", "*.def", "*.o")
+    @Internal
+    val linuxPatterns = listOf("sqlcipher", "*.a", "*.so", "*.pc", "*.map", "*.so.*")
+    @Internal
+    val make = "make"
+    @Internal
     lateinit var runner: Runner
+    @Internal
     lateinit var windows: WindowsToolExtension
 
     init {
@@ -53,29 +68,28 @@ abstract class BuilderTask(val buildType: String): DefaultTask() {
             .resolve("prebuilt")
             .resolve(ndkToolsDir)
 
-    private fun androidNdkPath(host: HostOs, buildType: String, msys: Boolean = true): String {
+    private fun androidNdkPath(host: HostOs, buildType: String, r22OrLater: Boolean, msys: Boolean = true): String {
         val t = when (buildType) {
             BuildTypes.arm64_v8a -> "aarch64-linux-android"
             BuildTypes.x86_64 -> "x86_64-linux-android"
-            else -> throw GradleException("Unsupported Android buildType: $buildType")
+            else -> return ""
         }
+        val sep = if (host == HostOs.WINDOWS && !msys) ";" else ":"
+        val extraPathEntry = if (r22OrLater) ""
+        else
+            sep + Runner.getMsysPath(androidPrebuilt.resolve(t).resolve("bin"))
+        val absPath = androidPrebuilt.resolve("bin").absolutePath + extraPathEntry
         return when (host) {
             HostOs.WINDOWS -> {
                 if (msys) {
-                    Runner.getMsysPath(androidPrebuilt.resolve("bin")) + ":" +
-                            Runner.getMsysPath(androidPrebuilt.resolve(t).resolve("bin"))
+                    Runner.getMsysPath(androidPrebuilt.resolve("bin")) + extraPathEntry
                 } else {
-                    androidPrebuilt.resolve("bin").absolutePath + ";" +
-                            androidPrebuilt.resolve(t).resolve("bin").absolutePath
+                    absPath
                 }
             }
+            HostOs.LINUX,
             HostOs.MAC -> {
-                androidPrebuilt.resolve("bin").absolutePath + ":" +
-                        androidPrebuilt.resolve(t).resolve("bin").absolutePath
-            }
-            HostOs.LINUX -> {
-                androidPrebuilt.resolve("bin").absolutePath + ":" +
-                        androidPrebuilt.resolve(t).resolve("bin").absolutePath
+                absPath
             }
         }
     }
@@ -87,6 +101,7 @@ abstract class BuilderTask(val buildType: String): DefaultTask() {
         vStudioEnvFilePath.set(tools.windows.vStudioEnvFile.absolutePath)
         androidMinimumSdk.set(tools.android.minimumSdk)
         androidNdkRoot.set(tools.android.ndkRoot)
+        r22OrLater = tools.android.r22OrLater
         runner = Runner(project, host, windows)
     }
 

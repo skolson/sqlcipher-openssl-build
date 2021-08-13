@@ -1,0 +1,21 @@
+Issues
+============================================
+Separate src into srcOpenssl and srcSqlcipher to avoid confusing gradle
+
+SqlCipher/Sqlite is using deprecated openssl stuff now warning with openssl 3.0. Form 4.4.3 amalgamation:
+sqlite3.c:25263:10: warning: 'HMAC_CTX_new' is deprecated [-Wdeprecated-declarations]
+    hctx = HMAC_CTX_new();
+sqlite3.c:25268:11: warning: 'HMAC_Init_ex' is deprecated [-Wdeprecated-declarations]
+      if(!HMAC_Init_ex(hctx, hmac_key, key_sz, EVP_sha1(), NULL)) goto error;
+sqlite3.c:25271:11: warning: 'HMAC_Init_ex' is deprecated [-Wdeprecated-declarations]
+      if(!HMAC_Init_ex(hctx, hmac_key, key_sz, EVP_sha256(), NULL)) goto error;
+sqlite3.c:25274:11: warning: 'HMAC_Init_ex' is deprecated [-Wdeprecated-declarations]
+      if(!HMAC_Init_ex(hctx, hmac_key, key_sz, EVP_sha512(), NULL)) goto error;
+sqlite3.c:25280:7: warning: 'HMAC_Update' is deprecated [-Wdeprecated-declarations]
+  if(!HMAC_Update(hctx, in, in_sz)) goto error;
+sqlite3.c:25282:9: warning: 'HMAC_Update' is deprecated [-Wdeprecated-declarations]
+    if(!HMAC_Update(hctx, in2, in2_sz)) goto error;
+sqlite3.c:25284:7: warning: 'HMAC_Final' is deprecated [-Wdeprecated-declarations]
+  if(!HMAC_Final(hctx, out, &outlen)) goto error;
+sqlite3.c:25290:12: warning: 'HMAC_CTX_free' is deprecated [-Wdeprecated-declarations]
+  if(hctx) HMAC_CTX_free(hctx);

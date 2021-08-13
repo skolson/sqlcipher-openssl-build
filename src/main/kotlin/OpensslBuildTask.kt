@@ -7,7 +7,9 @@ import org.gradle.api.tasks.*
 import java.io.File
 import javax.inject.Inject
 
-abstract class OpensslBuildTask @Inject constructor(buildType: String): BuilderTask(buildType) {
+abstract class OpensslBuildTask @Inject constructor(buildType: String)
+    : BuilderTask(buildType) {
+    @get:Input
     override val buildName = "openssl"
 
     init {
@@ -112,18 +114,18 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String): BuilderT
         val configureCommand = StringBuilder()
                 .append("./Configure ")
                 .append(arch)
-                .append(" -D__ANDROID_API__=${androidMinimumSdk.get()}")
+                .append(" -D_ANDROID_API=${androidMinimumSdk.get()}")
                 .append(" -D_FILE_OFFSET_BITS=64 $configureOptionsString")
 
         val exportPath = "export PATH=$androidNdkPath:\$PATH"
-        val ndkHome = if (host == HostOs.WINDOWS)
+        val ndkRoot = if (host == HostOs.WINDOWS)
             Runner.getMsysPath(androidNdkRoot.get())
         else
             androidNdkRoot.get()
         val shFilename = createPluginFile(srcDir, "$defaultFileName.sh") {
             """
             #!/bin/sh
-            export ANDROID_NDK_HOME=$ndkHome
+            export ANDROID_NDK_ROOT=$ndkRoot
             $exportPath
             $configureCommand
             make clean

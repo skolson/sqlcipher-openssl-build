@@ -79,10 +79,6 @@ open class SqlcipherExtension: PluginExtension() {
     var srcDirectory = srcDir
     var targetsDirectory = targetsDir
 
-    private var sqliteVersion = "3.33.0000"
-    private val sqliteRawVersion get() = sqliteVersion.replace(".", "")
-    val sqliteSourceURI get() = "https://www.sqlite.org/2020/sqlite-amalgamation-$sqliteRawVersion.zip\""
-
     fun builds(vararg targets: String) {
         builds.clear()
         targets.forEach {
@@ -113,7 +109,7 @@ open class SqlcipherExtension: PluginExtension() {
     companion object {
         const val defaultGithubUri = "https://github.com/sqlcipher/sqlcipher"
         const val defaultVersion = "4.4.0"
-        const val srcDir = "src"
+        private const val srcDir = "srcSqlCipher"
         const val targetsDir = "targets"
 
         /**
@@ -208,7 +204,7 @@ open class WindowsToolExtension {
 
     val vStudioEnvFile get() = File("${visualStudioInstall}${visualStudioConfig}")
     private val windowsPerlDir get() = "${perlInstallDirectory}\\bin"
-    val windowsPerl get() = "${windowsPerlDir}\\perlExe"
+    val windowsPerl get() = "${windowsPerlDir}\\$perlExe"
 
     fun verifyMingw64() {
         if (msys2InstallDirectory.isEmpty())
@@ -278,9 +274,23 @@ open class WindowsToolExtension {
     }
 }
 
+/**
+ * Default NDK version to search for is r21b 21.3.6528147. If setting changes this to empty, then search
+ * for latest installed NDK in sdkLocation.  Starting with r22, the required PATH
+ * for tools usage simplified.
+ */
 open class AndroidToolExtension {
     var sdkLocation = ""
     var ndkVersion = "21.3.6528147"
+    val r22OrLater: Boolean
+        get() {
+        if (ndkVersion.isEmpty()) return false
+        val ndkTokens = ndkVersion.split(".")
+        if (ndkTokens.size != 3 || ndkTokens[0].toIntOrNull() == null)
+            throw GradleException("Android NDK version $ndkVersion unsupported format")
+        return ndkTokens[0].toInt() >= 22
+    }
+
     val ndkRoot get() = File(sdkLocation).resolve("ndk").resolve(ndkVersion)
     var minimumSdk = 23
 
@@ -320,6 +330,9 @@ open class OpensslExtension {
     val downloadSource get() = "${sourceURI}${tagName}.tar.gz"
     val downloadSourceFileName get() = downloadSource.substring(sourceURI.length)
 
+    /*
+    The tar file in the downloaded archive contains and extra openssl- prefix, easiest to just use it
+     */
     fun compileDirectory(target: Project): File {
         return target.buildDir.resolve("${srcDirectory}/openssl-${tagName}")
     }
@@ -328,7 +341,7 @@ open class OpensslExtension {
         const val defaultGithubUri = "https://github.com/openssl/openssl"
         const val defaultGithubUriArchive = "${defaultGithubUri}/archive/"
         const val defaultTagName = "OpenSSL_1_1_1h"
-        const val openSslSrcDir = "src"
+        const val openSslSrcDir = "srcOpenssl"
         const val opensslTargetsDir = "targets"
         val defaultConfigureOptions = listOf("no-asm", "no-weak-ssl-ciphers")
 

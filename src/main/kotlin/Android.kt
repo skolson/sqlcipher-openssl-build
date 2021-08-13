@@ -35,7 +35,7 @@ class AndroidSqlCipher(
             "LOCAL_MODULE" to "libsqlcipher",
             "LOCAL_SRC_FILES" to "sqlite3.c",
             "LOCAL_LDLIBS" to "-llog",
-            "LOCAL_LDFLAGS" to "-fuse-ld=bfd"
+            "LOCAL_LDFLAGS" to "-fuse-ld=bfd"  // only use this for NDK r21 and earlier
     )
     private val ndkBuildOptions = listOf(
             "V=1",
@@ -50,7 +50,8 @@ class AndroidSqlCipher(
               opensslTargetDir: File,
               compilerOptionsString: String,
               androidNdkRoot: File,
-              androidNdkPath: String): String
+              androidNdkPath: String,
+              r22OrLater: Boolean): String
     {
         buildAmalgamation(compilerOptionsString)
         val cFlags = StringBuilder()
@@ -66,6 +67,11 @@ class AndroidSqlCipher(
         }
 
         val opensslModule = "libcrypto"
+        val ldFlags = if (r22OrLater)
+            "LOCAL_LDFLAGS += -L${Runner.forwardSlash(opensslTargetDir.absolutePath)}"
+        else
+            "LOCAL_LDFLAGS += -L${Runner.forwardSlash(opensslTargetDir.absolutePath)} ${makeVars["LOCAL_LDFLAGS"]}"
+
         BuilderTask.createPluginFile(srcDir, pluginMakeFileName, false) {
             """
             LOCAL_PATH := ${'$'}(call my-dir)
@@ -74,10 +80,9 @@ class AndroidSqlCipher(
             LOCAL_C_INCLUDES += ${'$'}(LOCAL_PATH)
             LOCAL_CFLAGS += $cFlags
             LOCAL_SRC_FILES := ${makeVars["LOCAL_SRC_FILES"]}
-            LOCAL_LDFLAGS += -L${Runner.forwardSlash(opensslTargetDir.absolutePath)} ${makeVars["LOCAL_LDFLAGS"]}
+            $ldFlags
             LOCAL_STATIC_LIBRARIES += $opensslModule
             include ${'$'}(BUILD_SHARED_LIBRARY)
-            
             include ${'$'}(CLEAR_VARS)
             LOCAL_MODULE := $opensslModule
             LOCAL_EXPORT_C_INCLUDES := ${Runner.forwardSlash(opensslIncludeDir.absolutePath)}
@@ -100,7 +105,7 @@ class AndroidSqlCipher(
             }
         } else {
             val exportPath = "export PATH=$androidNdkPath:\$PATH"
-            val ndkHome = if (host == HostOs.WINDOWS)
+            val ndkRoot = if (host == HostOs.WINDOWS)
                 Runner.getMsysPath(androidNdkRoot)
             else
                 androidNdkRoot
@@ -109,7 +114,7 @@ class AndroidSqlCipher(
             val shFilename = BuilderTask.createPluginFile(srcDir, "sqlcipher-${buildType}.sh") {
                 """
                 #!/bin/sh
-                export ANDROID_NDK_HOME=$ndkHome
+                export ANDROID_NDK_ROOT=$ndkRoot
                 $exportPath
                 $commandLine
                 """.trimIndent()

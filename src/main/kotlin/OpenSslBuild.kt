@@ -2,13 +2,47 @@ package com.oldguy.gradle
 
 import org.gradle.api.GradleException
 import org.gradle.api.Project
-import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.*
 import java.net.URL
+import javax.inject.Inject
+
+/**
+ * Isolates the gradle input and output properties for OpenSSL tasks
+ */
+abstract class OpenSslExtractTask: @Inject ExtractArchiveTask() {
+    @get:InputFile
+    abstract override val archiveFile: RegularFileProperty
+    @get:OutputDirectory
+    abstract override val sourceDirectory: DirectoryProperty
+}
+
+abstract class OpenSslGitTask: @Inject GitCheckoutTask() {
+    @get:Input
+    abstract override val uri: Property<String>
+    @get:Input
+    abstract override val tagName: Property<String>
+    @get:OutputDirectory
+    abstract override val sourceDirectory: DirectoryProperty
+}
+
+abstract class OpenSslDownloadTask: @Inject DownloadArchiveTask() {
+    @get:Input
+    abstract override val url: Property<URL>
+    @get:OutputFile
+    abstract override val downloadFile: RegularFileProperty
+}
 
 class OpenSslBuild(target: Project, sqlcipherExt: SqlcipherExtension)
     : Builder(target, sqlcipherExt.toolsExt)
 {
     override val buildName = constBuildName
+    override lateinit var extractTask: TaskProvider<out ExtractArchiveTask>
+    override lateinit var gitTask: TaskProvider<out GitCheckoutTask>
+    override lateinit var downloadTask: TaskProvider<out DownloadArchiveTask>
+
     private val ext = sqlcipherExt.opensslExt
     private val buildTypes = sqlcipherExt.buildTypes
     private val builds = sqlcipherExt.builds
@@ -28,18 +62,30 @@ class OpenSslBuild(target: Project, sqlcipherExt: SqlcipherExtension)
                 verifyNasm()
             }
         }
-        val taskPair = registerSourceTasks(
-                { target.buildDir.resolve(ext.srcDirectory).resolve(ext.downloadSourceFileName) },
+        val srcDir = target.buildDir.resolve(ext.srcDirectory)
+        if (!srcDir.exists()) srcDir.mkdir()
+        registerSourceTasks(
+                { srcDir.resolve(ext.downloadSourceFileName) },
                 { ext.compileDirectory(target) },
                 opensslVerify)
         buildTypes.supportedBuilds.forEach {
-            registerTasks(it, taskPair.first, taskPair.second)
+            registerTasks(it)
         }
     }
 
-    private fun registerTasks(buildType: String,
-                              gitTask:TaskProvider<GitCheckoutTask>,
-                              extractTask:TaskProvider<ExtractArchiveTask>) {
+    override fun registerExtractTask() {
+        extractTask = target.tasks.register("${buildName}Extract", OpenSslExtractTask::class.java)
+    }
+
+    override fun registerGitTask() {
+        gitTask = target.tasks.register("${buildName}Git", OpenSslGitTask::class.java)
+    }
+
+    override fun registerDownloadTask() {
+        downloadTask = target.tasks.register("${buildName}Download", OpenSslDownloadTask::class.java)
+    }
+
+    private fun registerTasks(buildType: String) {
         val verify = target.tasks.register("${buildName}Verify$buildType") { task ->
             task.dependsOn(extractTask, gitTask)
             task.onlyIf {
@@ -73,7 +119,6 @@ class OpenSslBuild(target: Project, sqlcipherExt: SqlcipherExtension)
                     BuildTypes.linuxX64 -> {
                     }
                     BuildTypes.ios64 -> {
-                        TODO()
                     }
                     else -> throw GradleException("Verify: unsupported buildType: $buildType")
                 }

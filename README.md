@@ -10,6 +10,8 @@ At a high level, this is current status and near-term plans for the plugin. See 
     - Visual Studio 2019 Community Edition
     - Mingw64 using MSYS2 and a variety of installed MSYS2 packages
     - Android 64 bit (arm64_v8a, x86_64) builds using NDK 21.3.6528147 (r20b) 
+    - Android 64 bit (arm64_v8a, x86_64) builds using NDK 22.1.7171670 (r21b)
+    - Openssl 1.1.k and earlier has an issue with android NDK r22 and later. See [OpenSSL Github pull 13694](https://github.com/openssl/openssl/pull/13694). The current 3.0.0 beta has the required fix. So to use the newer NDK versions, use 3.x of openssl. The fix is also backported and merged, so should be available in 1.1.1l or later. 
 - Linux builds on Ubuntu are working
     - linuxX64 using gcc toolchain
     - Android 64 bit (arm64_v8a, x86_64) builds using NDK 21.3.6528147 (r20b)
@@ -29,7 +31,9 @@ The plugin successfully performs 64 bit builds of these combinations.  Others ma
 | 1.1.g             | 4.4.0                 | 3.31.0                |
 | 1.1.h             | 4.4.0                 | 3.31.0                |
 | 1.1.h             | 4.4.1                 | 3.33.0                |
-    
+| 1.1.h             | 4.4.2                 | 3.33.0                |
+| 3.0.0 beta2       | 4.4.3                 | 3.34.1                |
+
 ## OpenSSL
 *From the OpenSSL site:*
 
@@ -74,7 +78,7 @@ There is some complexity involved with correctly building OpenSSL and SqlCipher 
 - Provide additional documentation on platform-specific build details, with initial focus on Windows host builds. 
 
 ## Environments 
-This plugin has been tested with Gradle 6.6.1 so far. Older V6.x versions of Gradle should work, but are untested.  Host operating systems tested so far include Windows 10, Ubuntu 14.04, and in near future Mac OS Catalina. Plugin source is Kotlin 1.4.0. As of September 2020 only current versions of SqlCipher (4.4.0) and OpenSSL (1.1.1g, 1.1.1h) have been tested. 
+This plugin has been tested with Gradle 7.0.2 and 6.6.1 so far. Older V6.x versions of Gradle should work, but are untested.  Host operating systems tested so far include Windows 10, Ubuntu 14.04, and in near future Mac OS Catalina. Plugin source is Kotlin 1.4.0. As of September 2020 only current versions of SqlCipher (4.4.0) and OpenSSL (1.1.1g, 1.1.1h) have been tested. 
 
 Windows support is included for three tool chains, each with its own requirements. Windows builds have to be run on a Windows host:
 - Visual Studio 2019 Community Edition
@@ -154,7 +158,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
     sqlcipher {
         useGit = false
-        version = "4.4.0"
+        version = "4.4.3"
         compilerOptions = SqlcipherExtension.defaultCompilerOptions +
             "-DSQLITE_LIKE_DOESNT_MATCH_BLOBS"
 
@@ -170,12 +174,12 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
             }
             android {
                 sdkLocation = "D:\\Android\\sdk"
-                ndkVersion = "21.3.6528147"
+                ndkVersion = "22.1.7171670"
                 minimumSdk = 23
             }
         }
         openssl {
-            tagName = "OpenSSL_1_1_1g"
+            tagName = "OpenSSL_1_1_1k"
             useGit = false
         }
     }
