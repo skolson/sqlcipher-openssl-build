@@ -36,7 +36,8 @@ class PluginBuildTest : StringSpec({
             compilerOptions = SqlcipherExtension.androidCompilerOptions
 
             //builds("vStudio64", "x86_64", "arm64-v8a", "mingw64", "linuxX64")
-            builds("arm64-v8a", "vStudio64")
+            //builds("arm64-v8a", "vStudio64")
+            builds("vStudio64")
             
             tools {
                 windows {
@@ -57,6 +58,9 @@ class PluginBuildTest : StringSpec({
                 tagName = "openssl-3.0.0-beta2"
                 useGit = false
                 configureOptions = OpensslExtension.smallConfigureOptions
+                buildSpecificOptions = mapOf(
+                    "arm64-v8a" to OpensslExtension.nonWindowsOptions,
+                    "x86_64" to OpensslExtension.nonWindowsOptions)
             }
         }
     """.trimIndent()
@@ -68,7 +72,7 @@ class PluginBuildTest : StringSpec({
                     //.withArguments("sqlcipherBuildmingw64", "--stacktrace")
                     //.withArguments("sqlcipherBuildarm64-v8a", "--stacktrace")
                     //.withArguments("sqlcipherBuildx86_64", "--stacktrace")
-                    .withArguments("sqlcipherBuildAll", "--stacktrace", "-Dorg.gradle.debug=true")
+                    .withArguments("sqlcipherBuildAll", "--stacktrace", "--warning-mode", "all")
                     .build()
             println(result.output)
         }

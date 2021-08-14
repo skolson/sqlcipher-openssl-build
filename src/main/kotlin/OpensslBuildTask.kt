@@ -3,6 +3,7 @@ package com.oldguy.gradle
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.*
 import java.io.File
 import javax.inject.Inject
@@ -26,11 +27,13 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
     @get:OutputDirectory
     abstract val targetDirectory: DirectoryProperty
 
-    @get:OutputDirectory
+    @get:Internal
     abstract val includeDirectory: DirectoryProperty
 
-    fun setup(srcDir: File, targetDir: File, configureOptionList: List<String>) {
+    fun setup(srcDir: File, targetDir: File,
+              configureOptionList: List<String>) {
         configureOptions.set(configureOptionList)
+
         inputs.files(srcDir)
         sourceDirectory.set(srcDir)
         includeDirectory.set(srcDir.resolve("include"))

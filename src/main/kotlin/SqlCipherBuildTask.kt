@@ -4,19 +4,13 @@ import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import java.io.File
 import javax.inject.Inject
 
 abstract class SqlcipherBuildTask @Inject constructor(buildType: String): BuilderTask(buildType) {
+    @Internal
     override val buildName = "sqlcipher"
-
-    init {
-        description = "SqlCipher build task for buildType: $buildType"
-    }
 
     @get:InputDirectory
     abstract val sourceDirectory: DirectoryProperty
@@ -40,6 +34,10 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
     abstract val compilerOptions: ListProperty<String>
 
     private val compilerOptionsString get() = listToString(compilerOptions.get())
+
+    init {
+        description = "SqlCipher build task for buildType: $buildType"
+    }
 
     fun setup(srcDir: File, opensslIncludeDir: File, opensslLibDir: File, targetDir: File,
               windowsSdkInstall: String, windowsSdkLibVersion: String,

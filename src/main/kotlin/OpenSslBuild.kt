@@ -134,9 +134,15 @@ class OpenSslBuild(target: Project, sqlcipherExt: SqlcipherExtension)
                 task.setToolsProperties(tools)
                 val targetsDirectory = createTargetsDirectory(ext.targetsDirectory, buildName)
                 val srcDir = ext.compileDirectory(target)
+                val options = ext.configureOptions.toMutableList()
+                if (ext.buildSpecificOptions.containsKey(buildType)) {
+                    ext.buildSpecificOptions[buildType]?.let {
+                        options.addAll(0, it)
+                    }
+                }
                 task.setup(srcDir,
                         buildTypes.targetDirectory(targetsDirectory, buildType),
-                        ext.configureOptions)
+                        options)
             }
     }
 

@@ -323,6 +323,7 @@ open class OpensslExtension {
     var tagName = defaultTagName
     var sourceURI = defaultGithubUriArchive
     var configureOptions = defaultConfigureOptions
+    var buildSpecificOptions = emptyMap<String, List<String>>()
 
     var srcDirectory = openSslSrcDir
     var targetsDirectory = opensslTargetsDir
@@ -352,7 +353,8 @@ open class OpensslExtension {
         /**
          * This list of options originated in SqlCipher's source build process.
          */
-        val smallConfigureOptions = listOf("-fPIC", "-fstack-protector-all",
+        val nonWindowsOptions = listOf("-fPIC", "-fstack-protector-all")
+        val smallConfigureOptions = listOf(
                 "no-asm",
                 "no-idea", "no-camellia",
                 "no-seed", "no-bf", "no-cast", "no-rc2", "no-rc4", "no-rc5", "no-md2",
@@ -360,5 +362,11 @@ open class OpensslExtension {
                 "no-dsa", "no-dh", "no-ec", "no-ecdsa", "no-tls1",
                 "no-rfc3779", "no-whirlpool", "no-srp",
                 "no-mdc2", "no-ecdh", "no-engine", "no-srtp")
+        val smallOptionsMap = mapOf(
+            "arm64-v8a" to nonWindowsOptions + smallConfigureOptions,
+            "x86_64" to nonWindowsOptions + smallConfigureOptions,
+            "vStudio64" to smallConfigureOptions,
+        )
+
     }
 }

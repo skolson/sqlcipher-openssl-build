@@ -12,15 +12,13 @@ At a high level, this is current status and near-term plans for the plugin. See 
     - Android 64 bit (arm64_v8a, x86_64) builds using NDK 21.3.6528147 (r20b) 
     - Android 64 bit (arm64_v8a, x86_64) builds using NDK 22.1.7171670 (r21b)
     - Openssl 1.1.k and earlier has an issue with android NDK r22 and later. See [OpenSSL Github pull 13694](https://github.com/openssl/openssl/pull/13694). The current 3.0.0 beta has the required fix. So to use the newer NDK versions, use 3.x of openssl. The fix is also backported and merged, so should be available in 1.1.1l or later. 
+    - Android 64 bit (arm64_v8a, x86_64) builds using NDK 23.0.7599858 (r23)
 - Linux builds on Ubuntu are working
     - linuxX64 using gcc toolchain
     - Android 64 bit (arm64_v8a, x86_64) builds using NDK 21.3.6528147 (r20b)
 - MacOS builds pending
     - ios64
-- Sqlite only builds (no SqlCipher or OpenSSL)
-    - interest/useful?
-- Publishing in the Gradle plugin repository under name `sqlcipher-openssl-build` 
-- First release tag will be committed once all Windows hosted builds and all Linux hosted builds are working. Mac OS support will be later. The tag will be identified as alpha and will be published to the Gradle Plugin repo.
+- Published in the Gradle plugin repository under name `sqlcipher-openssl-build` 
 - Android configuration - easy add of extra source files (JNI wrappers) to standard library  
 
 #### Tested Version Combinations
@@ -317,9 +315,8 @@ Each option in the `openssl` block is below. OpenSSL build process uses a PERL c
 | defaultGithubUri          | constant  | `"https://github.com/openssl/openssl"` |
 | defaultGithubUriArchive   | constant  | `"${defaultGithubUri}/archive/"` |
 | configureOptions          | value     | List<String> of options to supply to the openssl Configure perl script. Any of the options supported by OpenSSL are valid, see [OpenSSL Compilation Wiki](https://wiki.openssl.org/index.php/Compilation_and_Installation) for details. See `defaultConfigureOptions` for an example specification using the kotlin `listof()` function for an example, and for the values used if this is not specified. Any expression that evaluates to a List<String> is usable. |   
-| defaultConfigureOptions   | constant  | `listOf("no-asm", "no-weak-ssl-ciphers")` |
-| openSslSrcDir             | constant  | `"src"` |
-| opensslTargetsDir         | constant  | `"targets"` |
+| configureOptions          | value     | List<String> of options to supply to the openssl Configure perl script. Any of the options supported by OpenSSL are valid, see [OpenSSL Compilation Wiki](https://wiki.openssl.org/index.php/Compilation_and_Installation) for details. See `defaultConfigureOptions` for an example specification using the kotlin `listof()` function for an example, and for the values used if this is not specified. Any expression that evaluates to a List<String> is usable. |   
+| buildSpecificOptions      | map       | If specified, contains a Map<String, List<String>>, where each entry is keyed by the build type that applies. Example: `buildSpecificOptionss = mapOf("arm64-v8a" to listOf("-fPIC", "-fstack-protector-all"), ...)`. If the current build type matches a key, the specified options for that key are added to those in configureOptions. |
 | smallConfigureOptions     | constant  | `listOf("-fPIC", "-fstack-protector-all", "no-asm","no-idea", "no-camellia", "no-seed", "no-bf", "no-cast", "no-rc2", "no-rc4", "no-rc5", "no-md2", "no-md4", "no-ecdh", "no-sock", "no-ssl3", "no-dsa", "no-dh", "no-ec", "no-ecdsa", "no-tls1", "no-rfc3779", "no-whirlpool", "no-srp", "no-mdc2", "no-ecdh", "no-engine", "no-srtp")`
 
 The value for `smallConfigureOptions` comes from the SqlCipher for android java library build process on Github [SqlCipher for Android](https://github.com/sqlcipher/android-database-sqlcipher).
@@ -383,7 +380,7 @@ Configure VC-WIN64A no-asm no-weak-ssl-ciphers
 nmake clean
 nmake
 ```
-The **configureOptions** can be changed in the openssl DSL to any combination of the options offered by OpenSSL: [OpenSSL Configure Options](https://wiki.openssl.org/index.php/Compilation_and_Installation#Configure_Options). See the Reference section above for details.
+The **configureOptions** can be changed in the openssl DSL to any combination of the options offered by OpenSSL: [OpenSSL Configure Options](https://wiki.openssl.org/index.php/Compilation_and_Installation#Configure_Options) as well as any compiler options. See the Reference section above for details.
 
 The SqlCipher windows build using Visual Studio is more complex.  See the **Reference** section above for details on the compile options and other configuration requirements. The install locations for the local Visual Studio install and the Windows SDK install must be set for this build to work. Sqlite/SqlCipher use a Visual Studio-specific make file **Makefile.msc** to drive the make process.  No Perl configuration script is used. The plugin then uses these steps. Note that a command file was used with nmake as there can be a LOT of text making the command line really long otherwise:
 - Visual Studio 64 bit native build environment setup **vcvars64.bat**

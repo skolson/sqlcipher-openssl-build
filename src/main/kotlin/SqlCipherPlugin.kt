@@ -104,7 +104,7 @@ class SqlCipherPlugin: Plugin<Project> {
  * This task is useful for running all builds in the builds list. It also supplies an output property containing
  * a Map of build target directories, keyed by the values in the builds() configuration function.
  */
-open class BuildAllTask @Inject constructor(val buildName: String): DefaultTask() {
+open class BuildAllTask @Inject constructor(@get:Input val buildName: String): DefaultTask() {
     init {
         description = "Aggregator for all tasks listed in the builds(...) function"
         group = "build"
