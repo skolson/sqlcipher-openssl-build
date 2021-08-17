@@ -143,7 +143,6 @@ class AndroidSqlCipher(
             """
             #!/bin/sh
             $cmdLine
-            make clean
             make $amalgamation
             """.trimIndent()
         }

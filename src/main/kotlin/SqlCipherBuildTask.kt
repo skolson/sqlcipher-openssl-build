@@ -96,7 +96,6 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
         val batFilename = createPluginFile(srcDir, "${defaultFileName}.bat") {
             """
             call "${vStudioEnvFilePath.get()}"
-            nmake /C /f Makefile.msc clean
             nmake /f Makefile.msc @$nmakeCmdFileName
             """.trimIndent()
         }
@@ -126,7 +125,6 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
             """
             #!/bin/sh
             $cmdLine
-            make clean
             make
             """.trimIndent()
         }

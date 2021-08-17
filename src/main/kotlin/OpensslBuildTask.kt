@@ -78,7 +78,6 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
             """
             call "${vStudioEnvFilePath.get()}"
             perl.exe Configure VC-WIN64A $configureOptionsString
-            nmake /C clean
             nmake
             """.trimIndent()        }
 
@@ -96,7 +95,6 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
         val shFilename = createPluginFile(srcDir, "$defaultFileName.sh") {
             """
             ./Configure $configureHost $configureOptionsString
-            $make clean
             $make all
             """.trimIndent()
         }
@@ -131,7 +129,6 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
             export ANDROID_NDK_ROOT=$ndkRoot
             $exportPath
             $configureCommand
-            make clean
             make build_libs
             """.trimIndent()
         }

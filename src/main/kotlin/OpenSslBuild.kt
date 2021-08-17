@@ -35,21 +35,23 @@ abstract class OpenSslDownloadTask: @Inject DownloadArchiveTask() {
     abstract override val downloadFile: RegularFileProperty
 }
 
-class OpenSslBuild(target: Project, sqlcipherExt: SqlcipherExtension)
+class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension)
     : Builder(target, sqlcipherExt.toolsExt)
 {
     override val buildName = constBuildName
-    override lateinit var extractTask: TaskProvider<out ExtractArchiveTask>
     override lateinit var gitTask: TaskProvider<out GitCheckoutTask>
     override lateinit var downloadTask: TaskProvider<out DownloadArchiveTask>
 
+    private val buildTypes get() = sqlcipherExt.buildTypes
     private val ext = sqlcipherExt.opensslExt
-    private val buildTypes = sqlcipherExt.buildTypes
-    private val builds = sqlcipherExt.builds
 
     /**
-     * These overrides are using get() to avoid setting them at afterEvaluate
+     * These overrides are using get() to as extensions are not configured until tasks are to be configured by Gradle
      */
+    private val builds get() = sqlcipherExt.builds
+    private val archiveTopDir get() = "openssl-${ext.tagName}"
+    // parent directory of each of the build type subdirectories
+    override val srcDir get() = target.buildDir.resolve(ext.srcDirectory)
     override val useGit: Boolean get() = ext.useGit
     override val gitUri:String get() = ext.githubUri
     override val gitTagName:String get() = ext.tagName
@@ -62,31 +64,49 @@ class OpenSslBuild(target: Project, sqlcipherExt: SqlcipherExtension)
                 verifyNasm()
             }
         }
-        val srcDir = target.buildDir.resolve(ext.srcDirectory)
-        if (!srcDir.exists()) srcDir.mkdir()
-        registerSourceTasks(
-                { srcDir.resolve(ext.downloadSourceFileName) },
-                { ext.compileDirectory(target) },
-                opensslVerify)
-        buildTypes.supportedBuilds.forEach {
-            registerTasks(it)
+
+        downloadTask = target.tasks.register("${buildName}Download", OpenSslDownloadTask::class.java) { task ->
+            task.dependsOn(opensslVerify)
+            task.onlyIf {
+                !useGit
+            }
+            task.setup(downloadUrl, srcDir.resolve(ext.downloadSourceFileName))
+        }
+
+        gitTask = target.tasks.register("${buildName}Git", OpenSslGitTask::class.java) { task ->
+            task.dependsOn(opensslVerify)
+            task.onlyIf {
+                useGit
+            }
+            task.setup(gitUri, gitTagName, gitDir)
+        }
+
+        buildTypes.supportedBuilds.forEach { buildType ->
+            val gitCopyTaskName = taskName(copyTaskName, buildType)
+            target.tasks.register(gitCopyTaskName, Copy::class.java) { task ->
+                task.dependsOn(gitTask)
+                task.onlyIf {
+                    useGit && builds.contains(buildType)
+                }
+                task.from(gitDir)
+                task.into(srcDir.resolve(buildType).resolve(ext.tagName))
+            }
+
+            registerTasks(buildType, gitCopyTaskName)
         }
     }
 
-    override fun registerExtractTask() {
-        extractTask = target.tasks.register("${buildName}Extract", OpenSslExtractTask::class.java)
-    }
+    private fun registerTasks(buildType: String, gitCopyTaskName: String) {
+        val extractName = taskName(extractTaskName, buildType)
+        val extractTask = target.tasks.register(extractName, OpenSslExtractTask::class.java) { task ->
+            task.dependsOn(downloadTask)
+            task.onlyIf {
+                !useGit && sqlcipherExt.builds.contains(buildType)
+            }
+            task.setup(downloadTask.get().downloadFile.get().asFile, compileDirectory(buildType, archiveTopDir))
+        }
 
-    override fun registerGitTask() {
-        gitTask = target.tasks.register("${buildName}Git", OpenSslGitTask::class.java)
-    }
-
-    override fun registerDownloadTask() {
-        downloadTask = target.tasks.register("${buildName}Download", OpenSslDownloadTask::class.java)
-    }
-
-    private fun registerTasks(buildType: String) {
-        val verify = target.tasks.register("${buildName}Verify$buildType") { task ->
+        val verify = target.tasks.register(taskName(verifyTaskName, buildType)) { task ->
             task.dependsOn(extractTask, gitTask)
             task.onlyIf {
                 builds.contains(buildType)
@@ -125,22 +145,27 @@ class OpenSslBuild(target: Project, sqlcipherExt: SqlcipherExtension)
             }
         }
 
-        target.tasks.register("${buildName}Build$buildType", OpensslBuildTask::class.java, buildType)
+        target.tasks.register(taskName(buildTaskName, buildType), OpensslBuildTask::class.java, buildType)
             .configure { task ->
-                task.dependsOn(verify)
+                val prereqName = if (useGit)
+                    gitCopyTaskName
+                else
+                    extractName
+                task.dependsOn(verify, target.tasks.getByName(prereqName))
                 task.onlyIf {
                     builds.contains(buildType)
                 }
                 task.setToolsProperties(tools)
                 val targetsDirectory = createTargetsDirectory(ext.targetsDirectory, buildName)
-                val srcDir = ext.compileDirectory(target)
                 val options = ext.configureOptions.toMutableList()
                 if (ext.buildSpecificOptions.containsKey(buildType)) {
                     ext.buildSpecificOptions[buildType]?.let {
                         options.addAll(0, it)
                     }
                 }
-                task.setup(srcDir,
+                val compileDir = compileDirectory(buildType, archiveTopDir)
+
+                task.setup(compileDir,
                         buildTypes.targetDirectory(targetsDirectory, buildType),
                         options)
             }

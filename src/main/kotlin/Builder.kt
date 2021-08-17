@@ -2,7 +2,6 @@ package com.oldguy.gradle
 
 import org.gradle.api.GradleException
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.process.ExecResult
 import org.gradle.process.ExecSpec
@@ -150,9 +149,14 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
     abstract val gitUri: String
     abstract val gitTagName: String
     abstract val downloadUrl: URL
-    abstract var extractTask: TaskProvider<out ExtractArchiveTask>
     abstract var gitTask: TaskProvider<out GitCheckoutTask>
     abstract var downloadTask: TaskProvider<out DownloadArchiveTask>
+    abstract val srcDir: File
+    val gitDir get() = srcDir.resolve("git")
+    val buildTaskName = "Build"
+    val copyTaskName = "GitCopy"
+    val extractTaskName = "Extract"
+    val verifyTaskName = "Verify"
 
     fun createTargetsDirectory(targetsName: String, buildName: String): File {
         val targetsDir = target.buildDir.resolve(targetsName)
@@ -169,46 +173,19 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
             "$fileName$linuxArchiveSuffix"
     }
 
-    abstract fun registerDownloadTask()
-    abstract fun registerGitTask()
-    abstract fun registerExtractTask()
+    fun taskName(name: String, buildType: String): String {
+        return "$buildName$name$buildType"
+    }
 
-    /**
-     * Registers the download, extract, and git related source tasks.  The result of these tasks is a populated source
-     * tree.
-     * @param downloadFile will be run during task configure time to obtain the download file absolute path
-     * @param compileDirectory will be run during task configure time to obtain the destination directory for the source tree to
-     * be built
-     * @param dependencies zero or more tasks the git and download source tasks will depend on.
-     */
-    fun registerSourceTasks(downloadFile: (() -> File),
-                            compileDirectory: (() -> File),
-                            vararg dependencies: TaskProvider<Task>) {
-        registerDownloadTask()
-        downloadTask.configure {
-            if (dependencies.isNotEmpty())
-                it.dependsOn(*dependencies)
-            it.onlyIf {
-                !useGit
-            }
-            it.setup(downloadUrl, downloadFile())
-        }
-        registerExtractTask()
-        extractTask.configure {
-            it.dependsOn(downloadTask)
-            it.onlyIf {
-                !useGit
-            }
-            it.setup(downloadTask.get().downloadFile.get().asFile, compileDirectory())
-        }
-        registerGitTask()
-        gitTask.configure {
-            if (dependencies.isNotEmpty())
-                it.dependsOn(*dependencies)
-            it.onlyIf {
-                useGit
-            }
-            it.setup(gitUri, gitTagName, compileDirectory())
+    fun compileDirectory(buildType: String, subDirectory: String = ""): File {
+        val srcBuildType = srcDir.resolve(buildType)
+        if (!srcBuildType.exists()) srcBuildType.mkdir()
+        return if (subDirectory.isEmpty())
+            srcBuildType
+        else {
+            val dir = srcBuildType.resolve(subDirectory)
+            if (!dir.exists()) dir.mkdir()
+            dir
         }
     }
 

@@ -65,13 +65,20 @@ class SqlCipherPlugin: Plugin<Project> {
 
         val cleanOpensslTask = target.tasks.register("${opensslTask.buildName}Clean", CleanAllTask::class.java)
         cleanOpensslTask.configure{
-            it.sourceDirectory.set(ext.opensslExt.compileDirectory(target))
+            ext.builds.forEach {
+
+            }
+            it.sourceDirectory.set(target.buildDir.resolve(ext.opensslExt.srcDirectory))
+            it.builds.clear()
+            it.builds.addAll(ext.builds)
             it.sourceArchive.set(ext.opensslExt.downloadSourceFileName)
             it.targetsDirectory.set(File(ext.opensslExt.targetsDirectory))
         }
         val cleanSqlcipherTask = target.tasks.register("${sqlcipherTask.buildName}Clean", CleanAllTask::class.java)
         cleanSqlcipherTask.configure{
-            it.sourceDirectory.set(ext.compileDirectory(target))
+            it.sourceDirectory.set(target.buildDir.resolve(ext.srcDirectory))
+            it.builds.clear()
+            it.builds.addAll(ext.builds)
             it.sourceArchive.set(ext.tagName)
             it.targetsDirectory.set(File(ext.targetsDirectory))
         }
@@ -137,6 +144,9 @@ open class CleanAllTask @Inject constructor(): DefaultTask() {
     @get:InputDirectory
     val sourceDirectory: DirectoryProperty = project.objects.directoryProperty()
 
+    @get:Input
+    val builds = emptyList<String>().toMutableList()
+
     @TaskAction
     fun dummy() {
         val targetDir = targetsDirectory.asFile.get()
@@ -145,7 +155,10 @@ open class CleanAllTask @Inject constructor(): DefaultTask() {
         }
         val sourceDir = sourceDirectory.asFile.get()
         if (sourceDir.exists()) {
-            sourceDir.deleteRecursively()
+            builds.forEach {
+                val srcBuild = sourceDir.resolve(it)
+                if (srcBuild.exists()) srcBuild.deleteRecursively()
+            }
         }
         sourceDir.parentFile?.listFiles()?.forEach {
             if (!it.isDirectory && it.nameWithoutExtension.startsWith(sourceArchive.get()))

@@ -130,8 +130,8 @@ Mac OS support requires
     - Verify checks the locations of the required tools to be sure they are present and usable.
     - Clone is an optional task, will clone and check out a specific tag name. Depends on Verify
     - Download is an optional task, will download a zip/tarball for the specified tag, usually from a Github archive URL. Depends on Verify
-    - Unzip is an optional task that depends on Download
-    - Build depends on Clone and Unzip.  Performs the build process. Once build is complete, copies the produced targets to a specified location for targets, in a subdirectory specific to build type.
+    - Extract is an optional task that depends on Download
+    - Build depends on Clone and Extract.  Performs the build process. Once build is complete, copies the produced targets to a specified location for targets, in a subdirectory specific to build type.
         - For example, sqlcipher build for buildType mingw64 defaults to `build/targets/sqlcipher/mingw64` as the subdirectory containing the built artifacts  
         - the directory with the build artifacts is the single output in that task's gradle task.outputs  
     - see the **DSL Reference** section for details on tasks that can be registered.
@@ -187,7 +187,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
 Using this configuration, running Gradle task `sqlcipherBuildAll` will run all the tasks required to perform the designated builds.
 
-In the above DSL, SqlCipher 4.4.0 would be built using a source archive (useGit = false) from Github (.zip if running Gradle on windows, .tar.gz if not). The **builds(...)** function indicates Visual Studio 64 bit, MingW64, and two android builds would be performed. These would happen only if gradle is being run on a Windows host. If gradle is being run on a linux host, then only the two android and one linuxX64 builds run. All targets produced would reside in the project buildDir/targets directory, each buildType having its own subdirectory. the project buildDir/src directory will contain one subdirectory each for OpenSSL and SqlCipher, with all respective build artifacts.  
+In the above DSL, SqlCipher 4.4.0 would be built using a source archive (useGit = false) from Github (.zip if running Gradle on windows, .tar.gz if not). The **builds(...)** function indicates Visual Studio 64 bit, MingW64, and two android builds would be performed. These would happen only if gradle is being run on a Windows host. If gradle is being run on a linux host, then only the two android and one linuxX64 builds run. All targets produced would reside in the project buildDir/targets directory, each buildType having its own subdirectory. the project buildDir directory will also contain "srcOpenssl" and one "srcSqlcipher" subdirectory each for OpenSSL and SqlCipher. Each of there will contain one subdirectory for each configured build type, containing source and all respective build artifacts.  
 
 The sqlcipher compilerOptions are derived from a default list with one additional custom option in this example.  Any kotlin expression that evaluates to a List<String> is valid.
 
@@ -234,11 +234,11 @@ Configuration DSL specifies the build types to be performed. Task names specific
 | opensslVerify*BT* | Each build type verifies the existence of the build tools configured in the **tools** DSL that are required for that build type |
 | opensslGit        | This optional task is one of two options for retrieving source for OpenSSL.  The source produced by this task is a single tag only clone and checkout from the Github repo configured in the DSL, which defaults to [OpenSSL Github](https://github.com/openssl/openssl) |
 | opensslDownload   | This optional task is one of two options for retrieving source for OpenSSL. It will do an HTTPS download of the .zip (for windows hosts) or .tar.gz archives, typically from the same Github site archive for the specified tag/release |
-| opensslExtract    | Performs the Extract All operation of the output from opensslDownload. |
+| opensslExtract*BT*| Performs the Extract All operation of the output from opensslDownload. |
 | opensslBuild*BT*  | Performs the build specific to the buildType. One of these is registered for each of the buildTypes configured in the **builds** function in the DSL that are supported by the host machine on which Gradle is running. These builds are not fast, on a decent but not great workstation they take close to 5 minutes each. Patience is a virtue :-).|
 | sqlcipherGit      | This optional task is one of two options for retrieving source for SqlCipher.  The source produced by this task is a single tag only clone and checkout from the Github repo configured in the DSL, which defaults to [SqlCipher Github](https://github.com/sqlcipher/sqlcipher) |
 | sqlcipherDownload | This optional task is one of two options for retrieving source for OpenSSL. It will do an HTTPS download of the .zip (for windows hosts) or .tar.gz archives, typically from the same Github site archive for the specified tag/release |
-| sqlcipherExtract  | Performs the Extract All operation of the output from opensslDownload. |
+| sqlcipherExtract*BT*| Performs the Extract All operation of the output from opensslDownload. |
 | sqlcipherBuild*BT*| Performs the build specific to the buildType. One of these is registered for each of the buildTypes configured in the **builds** function in the DSL that are supported by the host machine on which Gradle is running. |
 | opensslClean      | Deletes source directory and contents, as well as targetsDirectory and contents, for the OpenSSL version specified in the DSL. Also deletes source archive (zip or tar) if there is one.
 | sqlcipherClean    | Deletes source directory and contents, as well as targetsDirectory and contents, for SqlCipher and the taName specified in the DSL. Also deletes source archive (zip or tar) if there is one.

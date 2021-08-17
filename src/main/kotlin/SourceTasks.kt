@@ -98,6 +98,7 @@ abstract class ExtractArchiveTask @Inject constructor(): DefaultTask() {
     fun setup(archiveFile: File, srcDir: File) {
         this.archiveFile.set(archiveFile)
         inputs.file(this.archiveFile)
+        if (!srcDir.exists()) srcDir.mkdir()
         sourceDirectory.set(srcDir.resolve(".."))
         outputs.dir(sourceDirectory)
     }

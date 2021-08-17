@@ -43,56 +43,75 @@ class SqlCipherBuild(target: Project,
     : Builder(target, ext.toolsExt)
 {
     override val buildName = "sqlcipher"
-    private val builds = ext.builds
+    private val builds get() = ext.builds
+
+    private val downloadFileName: String get() = downloadSuffix(ext.tagName)
 
     override val useGit: Boolean get() = ext.useGit
     override val gitUri:String get() = ext.githubUri
     override val gitTagName:String get() = ext.tagName
-    private val downloadFileName: String get() = downloadSuffix(ext.tagName)
     override val downloadUrl: URL get() = URL("${ext.githubUri}/archive/$downloadFileName")
-    private val sourceDir get() = ext.compileDirectory(target).resolve("$buildName-${ext.version}")
-    override lateinit var extractTask: TaskProvider<out ExtractArchiveTask>
+    override val srcDir get() = target.buildDir.resolve(ext.srcDirectory)
     override lateinit var gitTask: TaskProvider<out GitCheckoutTask>
     override lateinit var downloadTask: TaskProvider<out DownloadArchiveTask>
+    private val sqlcipherDir get() = "sqlcipher-${ext.version}"
 
     init {
-        if (!sourceDir.exists())
-            sourceDir.mkdir()
-        registerSourceTasks(
-                { target.buildDir.resolve(ext.srcDirectory).resolve(downloadFileName) },
-                {sourceDir})
-        ext.buildTypes.supportedBuilds.forEach {
-            registerTasks(it)
+        downloadTask = target.tasks.register("${buildName}Download", SqlCipherDownloadTask::class.java) { task ->
+            task.onlyIf {
+                !useGit
+            }
+            task.setup(downloadUrl, srcDir.resolve(downloadFileName))
+        }
+
+        gitTask = target.tasks.register("${buildName}Git", SqlCipherGitTask::class.java) { task ->
+            task.onlyIf {
+                useGit
+            }
+            task.setup(gitUri, gitTagName, gitDir)
+        }
+
+        ext.buildTypes.supportedBuilds.forEach { buildType ->
+            val fullCopyTaskName = taskName(copyTaskName, buildType)
+            target.tasks.register(fullCopyTaskName, Copy::class.java) { task ->
+                task.dependsOn(gitTask)
+                task.onlyIf {
+                    useGit && builds.contains(buildType)
+                }
+                task.from(gitDir)
+                task.into(compileDirectory(buildType, sqlcipherDir))
+            }
+            registerTasks(buildType, fullCopyTaskName)
         }
     }
 
-    override fun registerExtractTask() {
-        extractTask = target.tasks.register("${buildName}Extract", SqlCipherExtractTask::class.java)
-    }
+    private fun registerTasks(buildType: String, fullCopyTaskName: String) {
+        val opensslTaskName = "${OpenSslBuild.constBuildName}$buildTaskName$buildType"
 
-    override fun registerGitTask() {
-        gitTask = target.tasks.register("${buildName}Git", SqlCipherGitTask::class.java)
-    }
-
-    override fun registerDownloadTask() {
-        downloadTask = target.tasks.register("${buildName}Download", SqlCipherDownloadTask::class.java)
-    }
-
-
-    private fun registerTasks(buildType: String) {
-        val opensslTaskName = "${OpenSslBuild.constBuildName}Build$buildType"
+        val extTaskName = taskName(extractTaskName, buildType)
+        target.tasks.register(extTaskName, SqlCipherExtractTask::class.java) { task ->
+            task.dependsOn(downloadTask)
+            task.onlyIf {
+                !useGit
+            }
+            task.setup(downloadTask.get().downloadFile.get().asFile, compileDirectory(buildType, sqlcipherDir))
+        }
 
         target.tasks.register("${buildName}Build$buildType", SqlcipherBuildTask::class.java, buildType)
             .configure {
                 ext.validateOptions()
                 val opensslTask = target.tasks.getByName(opensslTaskName) as OpensslBuildTask
-                it.dependsOn(gitTask, extractTask, opensslTask)
+                val prereqName = if (useGit)
+                    fullCopyTaskName
+                else
+                    extTaskName
+                it.dependsOn(target.tasks.getByName(prereqName), opensslTask)
                 it.onlyIf {
                     builds.contains(buildType) && ext.buildSqlCipher
                 }
                 it.setToolsProperties(ext.toolsExt)
                 it.setup(
-                        sourceDir,
+                    srcDir.resolve(buildType).resolve(sqlcipherDir),
                         opensslTask.includeDirectory.get().asFile,
                         opensslTask.targetDirectory.get().asFile,
                         createTargetsDirectory(ext.targetsDirectory, buildName).resolve(buildType),

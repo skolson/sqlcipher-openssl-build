@@ -1,5 +1,4 @@
 Issues
 ============================================
-vstudio and NDK builds of openssl sharing the openssl compile directory is confusing gradle. Consider making a source
-directory for each build type to avoid this.  Would require extract task to be registered for each openssl build task
-
+in Git task, clone into a "git" subdirectory of srcDir (done), then copy this structure into each of the build type directories
+to make a copy of the clone for each build type.

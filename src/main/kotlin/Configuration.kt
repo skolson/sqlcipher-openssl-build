@@ -102,10 +102,6 @@ open class SqlcipherExtension: PluginExtension() {
         }
     }
 
-    fun compileDirectory(target: Project): File {
-        return target.buildDir.resolve(srcDirectory)
-    }
-
     companion object {
         const val defaultGithubUri = "https://github.com/sqlcipher/sqlcipher"
         const val defaultVersion = "4.4.0"
@@ -330,13 +326,6 @@ open class OpensslExtension {
 
     val downloadSource get() = "${sourceURI}${tagName}.tar.gz"
     val downloadSourceFileName get() = downloadSource.substring(sourceURI.length)
-
-    /*
-    The tar file in the downloaded archive contains and extra openssl- prefix, easiest to just use it
-     */
-    fun compileDirectory(target: Project): File {
-        return target.buildDir.resolve("${srcDirectory}/openssl-${tagName}")
-    }
 
     companion object {
         const val defaultGithubUri = "https://github.com/openssl/openssl"
