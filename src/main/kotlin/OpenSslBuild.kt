@@ -89,7 +89,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
                     useGit && builds.contains(buildType)
                 }
                 task.from(gitDir)
-                task.into(srcDir.resolve(buildType).resolve(ext.tagName))
+                task.into(srcDir.resolve(buildType).resolve(archiveTopDir))
             }
 
             registerTasks(buildType, gitCopyTaskName)
