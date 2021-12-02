@@ -7,19 +7,18 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import java.net.URL
-import javax.inject.Inject
 
 /**
  * Isolates the gradle input and output properties for OpenSSL tasks
  */
-abstract class OpenSslExtractTask: @Inject ExtractArchiveTask() {
+abstract class OpenSslExtractTask: ExtractArchiveTask() {
     @get:InputFile
     abstract override val archiveFile: RegularFileProperty
     @get:OutputDirectory
     abstract override val sourceDirectory: DirectoryProperty
 }
 
-abstract class OpenSslGitTask: @Inject GitCheckoutTask() {
+abstract class OpenSslGitTask: GitCheckoutTask() {
     @get:Input
     abstract override val uri: Property<String>
     @get:Input
@@ -28,7 +27,7 @@ abstract class OpenSslGitTask: @Inject GitCheckoutTask() {
     abstract override val sourceDirectory: DirectoryProperty
 }
 
-abstract class OpenSslDownloadTask: @Inject DownloadArchiveTask() {
+abstract class OpenSslDownloadTask: DownloadArchiveTask() {
     @get:Input
     abstract override val url: Property<URL>
     @get:OutputFile

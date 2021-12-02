@@ -10,7 +10,7 @@ enum class HostOs {
 
     companion object {
         fun query(): HostOs {
-            val target = System.getProperty("os.name").toLowerCase()
+            val target = System.getProperty("os.name").lowercase()
             return if (target.startsWith("linux"))
                 LINUX
             else if (target.startsWith("windows"))

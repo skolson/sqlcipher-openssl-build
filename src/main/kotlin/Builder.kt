@@ -109,8 +109,7 @@ class Runner(private val target: Project, private val host:HostOs, private val e
         target.copy { copySpec ->
             copySpec.from(srcDir) {
                 if (patterns.isNotEmpty())
-                    if (patterns.isNotEmpty())
-                        it.include(patterns)
+                    it.include(patterns)
                 it.includeEmptyDirs = false
             }
             copySpec.into(targetDir)
@@ -198,7 +197,7 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
         const val linuxArchiveSuffix = ".tar.gz"
 
         fun isWindowsArchive(archiveFile: File): Boolean {
-            val fileName = archiveFile.name.toLowerCase()
+            val fileName = archiveFile.name.lowercase()
             return fileName.endsWith(windowsArchiveSuffix)
         }
     }

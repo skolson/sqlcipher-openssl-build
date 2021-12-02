@@ -6,19 +6,18 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import java.net.URL
-import javax.inject.Inject
 
 /**
  * Isolates the gradle input and output properties for SqlCipher tasks
  */
-abstract class SqlCipherExtractTask: @Inject ExtractArchiveTask() {
+abstract class SqlCipherExtractTask: ExtractArchiveTask() {
     @get:InputFile
     abstract override val archiveFile: RegularFileProperty
     @get:OutputDirectory
     abstract override val sourceDirectory: DirectoryProperty
 }
 
-abstract class SqlCipherGitTask: @Inject GitCheckoutTask() {
+abstract class SqlCipherGitTask: GitCheckoutTask() {
     @get:Input
     abstract override val uri: Property<String>
     @get:Input
@@ -27,7 +26,7 @@ abstract class SqlCipherGitTask: @Inject GitCheckoutTask() {
     abstract override val sourceDirectory: DirectoryProperty
 }
 
-abstract class SqlCipherDownloadTask: @Inject DownloadArchiveTask() {
+abstract class SqlCipherDownloadTask: DownloadArchiveTask() {
     @get:Input
     abstract override val url: Property<URL>
     @get:OutputFile

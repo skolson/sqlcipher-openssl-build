@@ -2,6 +2,11 @@
 
 ###Version history
 
+### 0.2.5 2021-08-15
+*Added*
+
+- Plugin built with Kotlin 1.6.0 and Gradle 7.4.
+
 ### 0.2.0 2021-08-15
 *Added*
 

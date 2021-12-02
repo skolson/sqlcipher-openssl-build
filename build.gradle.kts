@@ -2,16 +2,16 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.gradle.ext.ProjectSettings
 
 plugins {
-    kotlin("jvm") version "1.4.31" // see https://docs.gradle.org/7.0/userguide/compatibility.html
+    kotlin("jvm") version "1.6.0"
     `java-gradle-plugin`
-    id("org.jetbrains.gradle.plugin.idea-ext") version "1.0.1"
-    id("com.gradle.plugin-publish") version "0.15.0"
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.1"
+    id("com.gradle.plugin-publish") version "0.18.0"
     `maven-publish`
 }
 
 val groupName = "com.oldguy.gradle"
 val artifactName = "sqlcipher-openssl-build"
-val versionString = "0.2.0"
+val versionString = "0.2.5"
 group = groupName
 version = versionString
 
@@ -24,11 +24,10 @@ tasks.withType<Test> {
 }
 
 dependencies {
-    compileOnly(kotlin("stdlib-jdk8"))
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.12.0.202106070339-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r")
     testImplementation(kotlin("test-junit5"))
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.6.1")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:4.6.1")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:5.0.1")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:5.0.1")
 }
 
 tasks.withType<KotlinCompile>() {

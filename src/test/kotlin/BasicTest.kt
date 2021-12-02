@@ -31,7 +31,7 @@ class PluginBuildTest : StringSpec({
        
 
         sqlcipher {
-            useGit = true
+            useGit = false
             version = "4.4.3"
             compilerOptions = SqlcipherExtension.androidCompilerOptions
 
@@ -55,7 +55,7 @@ class PluginBuildTest : StringSpec({
             }
             openssl {
                 tagName = "openssl-3.0.0-beta2"
-                useGit = true
+                useGit = false
                 configureOptions = OpensslExtension.smallConfigureOptions
                 buildSpecificOptions = mapOf(
                     "arm64-v8a" to OpensslExtension.nonWindowsOptions,
