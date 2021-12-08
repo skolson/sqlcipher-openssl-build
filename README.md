@@ -24,13 +24,14 @@ At a high level, this is current status and near-term plans for the plugin. See 
 #### Tested Version Combinations
 The plugin successfully performs 64 bit builds of these combinations.  Others may work. Note that the Sqlite version is listed only for information, it is determined by the SqlCipher version.
 
-| OpenSSL version   | SqlCipher version     | Sqlite Version        |
-|-------------------|-----------------------|-----------------------
-| 1.1.g             | 4.4.0                 | 3.31.0                |
-| 1.1.h             | 4.4.0                 | 3.31.0                |
-| 1.1.h             | 4.4.1                 | 3.33.0                |
-| 1.1.h             | 4.4.2                 | 3.33.0                |
-| 3.0.0 beta2       | 4.4.3                 | 3.34.1                |
+| OpenSSL version | SqlCipher version | Sqlite Version |
+|-----------------|-------------------|----------------|
+| 1.1.g           | 4.4.0             | 3.31.0         |
+| 1.1.h           | 4.4.0             | 3.31.0         |
+| 1.1.h           | 4.4.1             | 3.33.0         |
+| 1.1.h           | 4.4.2             | 3.33.0         |
+| 3.0.0 beta2     | 4.4.3             | 3.34.1         |
+| 3.0.0           | 4.5.0             | 3.36.0         |
 
 ## OpenSSL
 *From the OpenSSL site:*
@@ -100,8 +101,8 @@ Windows support is included for three tool chains, each with its own requirement
 - CLang is not currently supported but could be easily added if there is interest.
 - Android NDK
     - Android Studio 4.0 or later, use SDK manager to install current versions:
-        - NDK (side-by-side) version r20b tested
-        - CMake
+        - NDK (side-by-side) version r20b through r23b tested
+        - CMake 3.18.1 (default with newer NDKs)
 
 Linux support requires the following packages on Ubuntu.  These may need adjustment on other distros:
 - to do
@@ -144,7 +145,7 @@ Use the plugins DSL in build.gradle.kts to declare enable the plugin:
 ```
     plugins {
             ...
-            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.1.1"
+            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.2.5"
     }
 ```
 
@@ -156,7 +157,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
     sqlcipher {
         useGit = false
-        version = "4.4.3"
+        version = "4.5.0"
         compilerOptions = SqlcipherExtension.defaultCompilerOptions +
             "-DSQLITE_LIKE_DOESNT_MATCH_BLOBS"
 
@@ -172,12 +173,12 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
             }
             android {
                 sdkLocation = "D:\\Android\\sdk"
-                ndkVersion = "22.1.7171670"
-                minimumSdk = 23
+                ndkVersion = "23.1.7779620"
+                minimumSdk = 26
             }
         }
         openssl {
-            tagName = "OpenSSL_1_1_1k"
+            tagName = "openssl-3.0.0"
             useGit = false
         }
     }
@@ -187,7 +188,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
 Using this configuration, running Gradle task `sqlcipherBuildAll` will run all the tasks required to perform the designated builds.
 
-In the above DSL, SqlCipher 4.4.0 would be built using a source archive (useGit = false) from Github (.zip if running Gradle on windows, .tar.gz if not). The **builds(...)** function indicates Visual Studio 64 bit, MingW64, and two android builds would be performed. These would happen only if gradle is being run on a Windows host. If gradle is being run on a linux host, then only the two android and one linuxX64 builds run. All targets produced would reside in the project buildDir/targets directory, each buildType having its own subdirectory. the project buildDir directory will also contain "srcOpenssl" and one "srcSqlcipher" subdirectory each for OpenSSL and SqlCipher. Each of there will contain one subdirectory for each configured build type, containing source and all respective build artifacts.  
+In the above DSL, SqlCipher 4.5.0 would be built using a source archive (useGit = false) from Github (.zip if running Gradle on windows, .tar.gz if not). The **builds(...)** function indicates Visual Studio 64 bit, MingW64, and two android builds would be performed. These would happen only if gradle is being run on a Windows host. If gradle is being run on a linux host, then only the two android and one linuxX64 builds run. All targets produced would reside in the project buildDir/targets directory, each buildType having its own subdirectory. the project buildDir directory will also contain "srcOpenssl" and one "srcSqlcipher" subdirectory each for OpenSSL and SqlCipher. Each of there will contain one subdirectory for each configured build type, containing source and all respective build artifacts.  
 
 The sqlcipher compilerOptions are derived from a default list with one additional custom option in this example.  Any kotlin expression that evaluates to a List<String> is valid.
 
@@ -214,35 +215,35 @@ The current version of the plugin only supports 64 bit tools and host OSs. Build
 
 Available Build Types are listed here. Gradle tasks registered are based on these as selected in the DSL. As is typical with Gradle, ANY of the build processes invoked by the plugin cause the plugin to punt. The plugin copies console output from the build processes to the gradle console. Currently this is done ate process completion.   
 
-|**Build Type** | Supporting Hosts  | Description |
-|---------------|-------------------|--------------------------------|
-| vstudio64     | Windows           | Visual Studio Community Edition 2019 is used as the compiler/linker and produces ,lib files and .dll files (and other file types) usable with any visual studio project. Older versions of Visual Studio may work but are untested. |
-| mingw64       | Windows           | MSYS2 and MINGW64 toolchains are used to produce mingw static and shared libs on a Windows host |
-| arm64-v8a     | Windows, Linux    | Uses the Android NDK configured in **tools** DSL to build 64 bit ARM static and shared libraries |
-| x86_64        | Windows, Linux    | Uses the Android NDK configured in **tools** DSL to build 64 bit Intel/AMD static and shared libraries |
-| linuxX64       | Linux             | Standard GCC toolchain is used to produce static and shared libraries and the command line utility for sqlcipher. Initially tested on Ubuntu |
-| ios64         | Mac OS            | To be added later |
+| **Build Type** | Supporting Hosts | Description                                                                                                                                                                                                                         |
+|----------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| vstudio64      | Windows          | Visual Studio Community Edition 2019 is used as the compiler/linker and produces ,lib files and .dll files (and other file types) usable with any visual studio project. Older versions of Visual Studio may work but are untested. |
+| mingw64        | Windows          | MSYS2 and MINGW64 toolchains are used to produce mingw static and shared libs on a Windows host                                                                                                                                     |
+| arm64-v8a      | Windows, Linux   | Uses the Android NDK configured in **tools** DSL to build 64 bit ARM static and shared libraries                                                                                                                                    |
+| x86_64         | Windows, Linux   | Uses the Android NDK configured in **tools** DSL to build 64 bit Intel/AMD static and shared libraries                                                                                                                              |
+| linuxX64       | Linux            | Standard GCC toolchain is used to produce static and shared libraries and the command line utility for sqlcipher. Initially tested on Ubuntu                                                                                        |
+| ios64          | Mac OS           | To be added later                                                                                                                                                                                                                   |
 
 
 Configuration DSL specifies the build types to be performed. Task names specific to a build type contain the build type in the name.  In the names below for these tasks, the build type is abbreviated to *BT*. Note that in the case of SqlCipher, no build-specific Verify tasks are needed, as it uses the same set of tools used by OpenSSL builds, which handles the verifications.   
 
-| Task Name         | Description |
-|-------------------|--------------------------------------------|
-| opensslBuildAll   | Top level task, easy way to build only openssl configured builds |
-| sqlcipherBuildAll | Top level task, easy way to build sqlcipher configured builds. Note since sqlcipher build tasks depend on their openssl counterparts, this will also build openssl. |
-| opensslVerify     | Uses the configuration information in the **tools** DSL to verify the install of a usable PERL and NASM. |
-| opensslVerify*BT* | Each build type verifies the existence of the build tools configured in the **tools** DSL that are required for that build type |
-| opensslGit        | This optional task is one of two options for retrieving source for OpenSSL.  The source produced by this task is a single tag only clone and checkout from the Github repo configured in the DSL, which defaults to [OpenSSL Github](https://github.com/openssl/openssl) |
-| opensslDownload   | This optional task is one of two options for retrieving source for OpenSSL. It will do an HTTPS download of the .zip (for windows hosts) or .tar.gz archives, typically from the same Github site archive for the specified tag/release |
-| opensslExtract*BT*| Performs the Extract All operation of the output from opensslDownload. |
-| opensslBuild*BT*  | Performs the build specific to the buildType. One of these is registered for each of the buildTypes configured in the **builds** function in the DSL that are supported by the host machine on which Gradle is running. These builds are not fast, on a decent but not great workstation they take close to 5 minutes each. Patience is a virtue :-).|
-| sqlcipherGit      | This optional task is one of two options for retrieving source for SqlCipher.  The source produced by this task is a single tag only clone and checkout from the Github repo configured in the DSL, which defaults to [SqlCipher Github](https://github.com/sqlcipher/sqlcipher) |
-| sqlcipherDownload | This optional task is one of two options for retrieving source for OpenSSL. It will do an HTTPS download of the .zip (for windows hosts) or .tar.gz archives, typically from the same Github site archive for the specified tag/release |
-| sqlcipherExtract*BT*| Performs the Extract All operation of the output from opensslDownload. |
-| sqlcipherBuild*BT*| Performs the build specific to the buildType. One of these is registered for each of the buildTypes configured in the **builds** function in the DSL that are supported by the host machine on which Gradle is running. |
-| opensslClean      | Deletes source directory and contents, as well as targetsDirectory and contents, for the OpenSSL version specified in the DSL. Also deletes source archive (zip or tar) if there is one.
-| sqlcipherClean    | Deletes source directory and contents, as well as targetsDirectory and contents, for SqlCipher and the taName specified in the DSL. Also deletes source archive (zip or tar) if there is one.
-   
+| Task Name            | Description                                                                                                                                                                                                                                                                                                                                           |
+|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| opensslBuildAll      | Top level task, easy way to build only openssl configured builds                                                                                                                                                                                                                                                                                      |
+| sqlcipherBuildAll    | Top level task, easy way to build sqlcipher configured builds. Note since sqlcipher build tasks depend on their openssl counterparts, this will also build openssl.                                                                                                                                                                                   |
+| opensslVerify        | Uses the configuration information in the **tools** DSL to verify the install of a usable PERL and NASM.                                                                                                                                                                                                                                              |
+| opensslVerify*BT*    | Each build type verifies the existence of the build tools configured in the **tools** DSL that are required for that build type                                                                                                                                                                                                                       |
+| opensslGit           | This optional task is one of two options for retrieving source for OpenSSL.  The source produced by this task is a single tag only clone and checkout from the Github repo configured in the DSL, which defaults to [OpenSSL Github](https://github.com/openssl/openssl)                                                                              |
+| opensslDownload      | This optional task is one of two options for retrieving source for OpenSSL. It will do an HTTPS download of the .zip (for windows hosts) or .tar.gz archives, typically from the same Github site archive for the specified tag/release                                                                                                               |
+| opensslExtract*BT*   | Performs the Extract All operation of the output from opensslDownload.                                                                                                                                                                                                                                                                                |
+| opensslBuild*BT*     | Performs the build specific to the buildType. One of these is registered for each of the buildTypes configured in the **builds** function in the DSL that are supported by the host machine on which Gradle is running. These builds are not fast, on a decent but not great workstation they take close to 5 minutes each. Patience is a virtue :-). |
+| sqlcipherGit         | This optional task is one of two options for retrieving source for SqlCipher.  The source produced by this task is a single tag only clone and checkout from the Github repo configured in the DSL, which defaults to [SqlCipher Github](https://github.com/sqlcipher/sqlcipher)                                                                      |
+| sqlcipherDownload    | This optional task is one of two options for retrieving source for OpenSSL. It will do an HTTPS download of the .zip (for windows hosts) or .tar.gz archives, typically from the same Github site archive for the specified tag/release                                                                                                               |
+| sqlcipherExtract*BT* | Performs the Extract All operation of the output from opensslDownload.                                                                                                                                                                                                                                                                                |
+| sqlcipherBuild*BT*   | Performs the build specific to the buildType. One of these is registered for each of the buildTypes configured in the **builds** function in the DSL that are supported by the host machine on which Gradle is running.                                                                                                                               |
+| opensslClean         | Deletes source directory and contents, as well as targetsDirectory and contents, for the OpenSSL version specified in the DSL. Also deletes source archive (zip or tar) if there is one.                                                                                                                                                              |
+| sqlcipherClean       | Deletes source directory and contents, as well as targetsDirectory and contents, for SqlCipher and the taName specified in the DSL. Also deletes source archive (zip or tar) if there is one.                                                                                                                                                         |
+
 ###DSL Reference ###
 
 The DSL block `sqlcipher { ... }` contains options specific to SqlCipher builds, and contains subsection `tool { ... }` for configuring tools used by the build tasks, and subsection `openssl { ... }` for OpenSSL specific build options. So a typical configuration block in build.gradle.kts is structured like this:
@@ -271,53 +272,53 @@ Since both openssl and sqlcipher sections rely on tools, the tools section is de
 
 Each of these configuration sections is a Gradle Extension class. the Extension classes are listed below.  Some have constant values that are available for use in the DSL expressions if desired.
 
-| Extension Class Name  | Description |
-|-----------------------|----------------------------------------------------|
-| SqlcipherExtension    | Configuration options for SqlCipher. The other extensions are properties of this extension |
-| OpensslExtension      | Configuration options for OpenSSL builds. |
-| ToolsExtension        | Mostly options indicating where tools are located. Owns platform-specific subsections. |
-| WindowsToolExtension  | Locations of windows-specific tools. Property of ToolsExtension 
-| AndroidToolExtension  | Android-specific configuration for the SDK and NDK to be used. Property of ToolsExtension | 
+| Extension Class Name | Description                                                                                |
+|----------------------|--------------------------------------------------------------------------------------------|
+| SqlcipherExtension   | Configuration options for SqlCipher. The other extensions are properties of this extension |
+| OpensslExtension     | Configuration options for OpenSSL builds.                                                  |
+| ToolsExtension       | Mostly options indicating where tools are located. Owns platform-specific subsections.     |
+| WindowsToolExtension | Locations of windows-specific tools. Property of ToolsExtension                            |
+| AndroidToolExtension | Android-specific configuration for the SDK and NDK to be used. Property of ToolsExtension  | 
 
 #### tools DSL subsection #####
 
 Each option in the `tools` block is below.  The type indicates whether the option is a **value** that can be assigned, a **constant** that cannot be assigned but is available for use in assignments to values, or a **function** that can be called. Note that the options here are all paths specific to the host in use.  Windows likes backslashes, which in kotlin KTS files require escaping. The `tools` block has platform specific subsections; `windows`, `android`.  These subsections are required only if using build types for those platforms. 
 
-| Name                      | Type      | Description |
-|---------------------------|-----------|-----------------------------------------|
-| **windows** settings      |
-| visualStudioInstall       | value     | Specify the absolute path to the directory where Visual Studio is installed. See 'defaultVisualStudioInstall' for the default value used if this is not specified, it is an example of a typical value. |
-| defaultVisualStudioInstall| constant  | `"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\"` |  
-| sdkInstall                | value     | Specify the absolute path to the directory where Windows SDK is installed. See 'defaultWindowsSdkInstall' for the default value used if this is not specified, it is an example of a typical value. |
-| defaultSdkInstall         | constant  | `"C:\\Program Files (x86)\\Windows Kits\\10"` |
-| sdkLibVersion             | value     | String value matching a subdirectory of `windowsSdkInstall`. See `defaultWindowsSdkLibVersion` for a typical value, and the one used if not specified. |        
-| defaultSdkLibVersion      | constant | `"10.0.18362.0"` for a version used with Visual Studio 2019 Community Edition. |
-| perlInstallDirectory      | value    | Specify the absolute path to the directory where a Windows version of PERL is installed.  Either Strawberry Perl or ActiveState Perl should work fine. Example: `"D:\\Strawberry\\perl"` |
-| msys2InstallDirectory     | value     | Specify the absolute path to the directory MSYS2 is installed in.  Don't install MSYS2 in an absolute path that has any embedded blanks, headaches ensue. Example: `msys2InstallDirectory = "D:\\msys64"`. Also note that as described elsewhere, a number of MSYS2 packages must be installed using `pacman` at the MSYS2 64 bit command prompt before verify and build tasks using build type `mingw64` can work.|
-| **android** settings      |
-| androidSdkLocation        | value     | Specify the absolute path to the directory where the Android SDK is installed. Example: `"D:\\Android\\sdk"` |
-| androidNdkVersion         | value     | String value matching a subdirectory of `androidSdkLocation`. Example: `"21.3.6528147"` for version r20b of the NDK . Note that the plugin assumes a standard NDK install for locating the underlying llvm toolchain used by ndk-build.cmd.  |
-| androidMinimumSdk         | int value | Specify the minimum sdk version android build will run on. Used by both Android NDK builds and OpenSSL configuration for android. Example: `23` |
+| Name                       | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                         |
+|----------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **windows** settings       |
+| visualStudioInstall        | value     | Specify the absolute path to the directory where Visual Studio is installed. See 'defaultVisualStudioInstall' for the default value used if this is not specified, it is an example of a typical value.                                                                                                                                                                                                             |
+| defaultVisualStudioInstall | constant  | `"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\"`                                                                                                                                                                                                                                                                                                                                         |  
+| sdkInstall                 | value     | Specify the absolute path to the directory where Windows SDK is installed. See 'defaultWindowsSdkInstall' for the default value used if this is not specified, it is an example of a typical value.                                                                                                                                                                                                                 |
+| defaultSdkInstall          | constant  | `"C:\\Program Files (x86)\\Windows Kits\\10"`                                                                                                                                                                                                                                                                                                                                                                       |
+| sdkLibVersion              | value     | String value matching a subdirectory of `windowsSdkInstall`. See `defaultWindowsSdkLibVersion` for a typical value, and the one used if not specified.                                                                                                                                                                                                                                                              |        
+| defaultSdkLibVersion       | constant  | `"10.0.18362.0"` for a version used with Visual Studio 2019 Community Edition.                                                                                                                                                                                                                                                                                                                                      |
+| perlInstallDirectory       | value     | Specify the absolute path to the directory where a Windows version of PERL is installed.  Either Strawberry Perl or ActiveState Perl should work fine. Example: `"D:\\Strawberry\\perl"`                                                                                                                                                                                                                            |
+| msys2InstallDirectory      | value     | Specify the absolute path to the directory MSYS2 is installed in.  Don't install MSYS2 in an absolute path that has any embedded blanks, headaches ensue. Example: `msys2InstallDirectory = "D:\\msys64"`. Also note that as described elsewhere, a number of MSYS2 packages must be installed using `pacman` at the MSYS2 64 bit command prompt before verify and build tasks using build type `mingw64` can work. |
+| **android** settings       |
+| androidSdkLocation         | value     | Specify the absolute path to the directory where the Android SDK is installed. Example: `"D:\\Android\\sdk"`                                                                                                                                                                                                                                                                                                        |
+| androidNdkVersion          | value     | String value matching a subdirectory of `androidSdkLocation`. Example: `"21.3.6528147"` for version r20b of the NDK . Note that the plugin assumes a standard NDK install for locating the underlying llvm toolchain used by ndk-build.cmd.                                                                                                                                                                         |
+| androidMinimumSdk          | int value | Specify the minimum sdk version android build will run on. Used by both Android NDK builds and OpenSSL configuration for android. Example: `23`                                                                                                                                                                                                                                                                     |
 
 #### openssl DSL subsection #####
 
 Each option in the `openssl` block is below. OpenSSL build process uses a PERL configure script to verify the build environment and generate the correct makefile artifacts used by a subsequent make run. The options below allow options to be supplied to that process.  
    
-| Name                      | Type      | Description |
-|---------------------------|-----------|-----------------------------------------|
-| srcDirectory              | value     | The subdirectory in the Gradle Project BuildDir that wll contain all source retrieved or generated by the plugin. See `openSslSrcDir` for an example value and the default if this is not speficied. |
-| targetsDirectory          | value     | The subdirectory in the Gradle Project BuildDir that wll contain a subdirectory for each build type, which will contain build artifacts produced for that build type. See `opensslTargetsDir` for an example and the default value used if this is not specified. | 
-| useGit                    | true/false| Specify true to use Git to retrieve source. Default is false, which uses HTTPS download.  Only specify this if a local git checkout of a specific tag is useful after doing build, it is noticeably slower than the download and extract option.   |
-| githubUri                 | value     | Required if `useGit = true`. See `defaultGithubUri` for the value used by default if not specified. |
-| tagName                   | value     | Required by both source options. Specify the Git tag name for the release to be retrieved. See `defaultTagName` for en example value, and the one used if this is not specified. Both "OpenSSL_1_1_1g" and "OpenSSL_1_1_1h" have been tested. | 
-| defaultTagName            | constant  | `"OpenSSL_1_1_1g"`
-| sourceURI                 | value     | URI used by the download task to retrieve a source archive file. Both `.zip` and `.tar.gz` are supported. See `defaultGithubUriArchive` for an example, and the value used if not specified. |
-| defaultGithubUri          | constant  | `"https://github.com/openssl/openssl"` |
-| defaultGithubUriArchive   | constant  | `"${defaultGithubUri}/archive/"` |
-| configureOptions          | value     | List<String> of options to supply to the openssl Configure perl script. Any of the options supported by OpenSSL are valid, see [OpenSSL Compilation Wiki](https://wiki.openssl.org/index.php/Compilation_and_Installation) for details. See `defaultConfigureOptions` for an example specification using the kotlin `listof()` function for an example, and for the values used if this is not specified. Any expression that evaluates to a List<String> is usable. |   
-| configureOptions          | value     | List<String> of options to supply to the openssl Configure perl script. Any of the options supported by OpenSSL are valid, see [OpenSSL Compilation Wiki](https://wiki.openssl.org/index.php/Compilation_and_Installation) for details. See `defaultConfigureOptions` for an example specification using the kotlin `listof()` function for an example, and for the values used if this is not specified. Any expression that evaluates to a List<String> is usable. |   
-| buildSpecificOptions      | map       | If specified, contains a Map<String, List<String>>, where each entry is keyed by the build type that applies. Example: `buildSpecificOptionss = mapOf("arm64-v8a" to listOf("-fPIC", "-fstack-protector-all"), ...)`. If the current build type matches a key, the specified options for that key are added to those in configureOptions. |
-| smallConfigureOptions     | constant  | `listOf("-fPIC", "-fstack-protector-all", "no-asm","no-idea", "no-camellia", "no-seed", "no-bf", "no-cast", "no-rc2", "no-rc4", "no-rc5", "no-md2", "no-md4", "no-ecdh", "no-sock", "no-ssl3", "no-dsa", "no-dh", "no-ec", "no-ecdsa", "no-tls1", "no-rfc3779", "no-whirlpool", "no-srp", "no-mdc2", "no-ecdh", "no-engine", "no-srtp")`
+| Name                    | Type       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|-------------------------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| srcDirectory            | value      | The subdirectory in the Gradle Project BuildDir that wll contain all source retrieved or generated by the plugin. See `openSslSrcDir` for an example value and the default if this is not speficied.                                                                                                                                                                                                                                                                 |
+| targetsDirectory        | value      | The subdirectory in the Gradle Project BuildDir that wll contain a subdirectory for each build type, which will contain build artifacts produced for that build type. See `opensslTargetsDir` for an example and the default value used if this is not specified.                                                                                                                                                                                                    | 
+| useGit                  | true/false | Specify true to use Git to retrieve source. Default is false, which uses HTTPS download.  Only specify this if a local git checkout of a specific tag is useful after doing build, it is noticeably slower than the download and extract option.                                                                                                                                                                                                                     |
+| githubUri               | value      | Required if `useGit = true`. See `defaultGithubUri` for the value used by default if not specified.                                                                                                                                                                                                                                                                                                                                                                  |
+| tagName                 | value      | Required by both source options. Specify the Git tag name for the release to be retrieved. See `defaultTagName` for en example value, and the one used if this is not specified. Both "OpenSSL_1_1_1g" and "OpenSSL_1_1_1h" have been tested.                                                                                                                                                                                                                        | 
+| defaultTagName          | constant   | `"OpenSSL_1_1_1g"`                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| sourceURI               | value      | URI used by the download task to retrieve a source archive file. Both `.zip` and `.tar.gz` are supported. See `defaultGithubUriArchive` for an example, and the value used if not specified.                                                                                                                                                                                                                                                                         |
+| defaultGithubUri        | constant   | `"https://github.com/openssl/openssl"`                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| defaultGithubUriArchive | constant   | `"${defaultGithubUri}/archive/"`                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| configureOptions        | value      | List<String> of options to supply to the openssl Configure perl script. Any of the options supported by OpenSSL are valid, see [OpenSSL Compilation Wiki](https://wiki.openssl.org/index.php/Compilation_and_Installation) for details. See `defaultConfigureOptions` for an example specification using the kotlin `listof()` function for an example, and for the values used if this is not specified. Any expression that evaluates to a List<String> is usable. |   
+| configureOptions        | value      | List<String> of options to supply to the openssl Configure perl script. Any of the options supported by OpenSSL are valid, see [OpenSSL Compilation Wiki](https://wiki.openssl.org/index.php/Compilation_and_Installation) for details. See `defaultConfigureOptions` for an example specification using the kotlin `listof()` function for an example, and for the values used if this is not specified. Any expression that evaluates to a List<String> is usable. |   
+| buildSpecificOptions    | map        | If specified, contains a Map<String, List<String>>, where each entry is keyed by the build type that applies. Example: `buildSpecificOptionss = mapOf("arm64-v8a" to listOf("-fPIC", "-fstack-protector-all"), ...)`. If the current build type matches a key, the specified options for that key are added to those in configureOptions.                                                                                                                            |
+| smallConfigureOptions   | constant   | `listOf("-fPIC", "-fstack-protector-all", "no-asm","no-idea", "no-camellia", "no-seed", "no-bf", "no-cast", "no-rc2", "no-rc4", "no-rc5", "no-md2", "no-md4", "no-ecdh", "no-sock", "no-ssl3", "no-dsa", "no-dh", "no-ec", "no-ecdsa", "no-tls1", "no-rfc3779", "no-whirlpool", "no-srp", "no-mdc2", "no-ecdh", "no-engine", "no-srtp")`                                                                                                                             |
 
 The value for `smallConfigureOptions` comes from the SqlCipher for android java library build process on Github [SqlCipher for Android](https://github.com/sqlcipher/android-database-sqlcipher).
 
@@ -327,34 +328,34 @@ If in the future other common option sets develop during use, they will be added
 
 Each option in the `sqlcipher` block is below. OpenSSL build process uses a PERL configure script to verify the build environment and generate the correct makefile artifacts used by a subsequent make run. The options below allow options to be supplied to that process.  
    
-| Name                      | Type      | Description |
-|---------------------------|-----------|-----------------------------------------|
-| buildSqlCipher            | true/false| Default true, controls whether build tasks for sqlcipher are registered. Specify false if only openssl is desired. | 
-| srcDirectory              | value     | The subdirectory in the Gradle Project BuildDir that wll contain all source retrieved or generated by the plugin. See `sqlcipherSrcDir` for an example value and the default if this is not speficied. |
-| targetsDirectory          | value     | The subdirectory in the Gradle Project BuildDir that wll contain a subdirectory for each build type, which will contain build artifacts produced for that build type. See `sqlcipherTargetsDir` for an example and the default value used if this is not specified. | 
-| builds                    | function  | Accepts a list of strings.  Must be one or more of the supported Build Types (see above). Specifying build types not supported by the host OS running gradle causes those build types to be skipped. Specifying anything other than a valid buildType in the list of arguments causes the plugin to punt. |
-| useGit                    | true/false| Specify true to use Git to retrieve source. Default is false, which uses HTTPS download.  Only specify this if a local git checkout of a specific tag is useful after doing build for non-plugin work, it is noticeably slower than the download and extract option.   |
-| githubUri                 | value     | Required if `useGit = true`. See `defaultGithubUri` for the value used by default if not specified. |
-| version                   | value     | Required by both source options. Specify the Version for the release to be retrieved. See `defaultVersion` for en example value, and the one used if this is not specified. SqlCipher uses the convention `tagName="v$version"`, so the plugin derives the GIT tag name and the download archive name from the version value. | 
-| defaultVersion            | constant  | `"4.4.0"`
-| sourceURI                 | value     | URI used by the download task to retrieve a source archive file. Both `.zip` and `.tar.gz` are supported. See `defaultGithubUriArchive` for an example, and the value used if not specified. |
-| defaultGithubUri          | constant  | `"https://github.com/sqlcipher/sqlcipher"` |
-| defaultGithubUriArchive   | constant  | `"${defaultGithubUri}/archive/"` |
-| configureOptions          | value     | List<String> of options to supply to the openssl Configure perl script. Any of the options supported by OpenSSL are valid, see [OpenSSL Compilation Wiki](https://wiki.openssl.org/index.php/Compilation_and_Installation) for details. See `defaultConfigureOptions` for an example specification using the kotlin `listof()` function for an example, and for the values used if this is not specified. Any expression that evaluates to a List<String> is usable. |   
-| defaultConfigureOptions   | constant  | `listOf("no-asm", "no-weak-ssl-ciphers")` |
-| sqlcipherSrcDir           | constant  | `"src"` |
-| sqlcipherTargetsDir       | constant  | `"targets"` |
+| Name                    | Type       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|-------------------------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| buildSqlCipher          | true/false | Default true, controls whether build tasks for sqlcipher are registered. Specify false if only openssl is desired.                                                                                                                                                                                                                                                                                                                                                   | 
+| srcDirectory            | value      | The subdirectory in the Gradle Project BuildDir that wll contain all source retrieved or generated by the plugin. See `sqlcipherSrcDir` for an example value and the default if this is not speficied.                                                                                                                                                                                                                                                               |
+| targetsDirectory        | value      | The subdirectory in the Gradle Project BuildDir that wll contain a subdirectory for each build type, which will contain build artifacts produced for that build type. See `sqlcipherTargetsDir` for an example and the default value used if this is not specified.                                                                                                                                                                                                  | 
+| builds                  | function   | Accepts a list of strings.  Must be one or more of the supported Build Types (see above). Specifying build types not supported by the host OS running gradle causes those build types to be skipped. Specifying anything other than a valid buildType in the list of arguments causes the plugin to punt.                                                                                                                                                            |
+| useGit                  | true/false | Specify true to use Git to retrieve source. Default is false, which uses HTTPS download.  Only specify this if a local git checkout of a specific tag is useful after doing build for non-plugin work, it is noticeably slower than the download and extract option.                                                                                                                                                                                                 |
+| githubUri               | value      | Required if `useGit = true`. See `defaultGithubUri` for the value used by default if not specified.                                                                                                                                                                                                                                                                                                                                                                  |
+| version                 | value      | Required by both source options. Specify the Version for the release to be retrieved. See `defaultVersion` for en example value, and the one used if this is not specified. SqlCipher uses the convention `tagName="v$version"`, so the plugin derives the GIT tag name and the download archive name from the version value.                                                                                                                                        | 
+| defaultVersion          | constant   | `"4.4.0"`                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| sourceURI               | value      | URI used by the download task to retrieve a source archive file. Both `.zip` and `.tar.gz` are supported. See `defaultGithubUriArchive` for an example, and the value used if not specified.                                                                                                                                                                                                                                                                         |
+| defaultGithubUri        | constant   | `"https://github.com/sqlcipher/sqlcipher"`                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| defaultGithubUriArchive | constant   | `"${defaultGithubUri}/archive/"`                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| configureOptions        | value      | List<String> of options to supply to the openssl Configure perl script. Any of the options supported by OpenSSL are valid, see [OpenSSL Compilation Wiki](https://wiki.openssl.org/index.php/Compilation_and_Installation) for details. See `defaultConfigureOptions` for an example specification using the kotlin `listof()` function for an example, and for the values used if this is not specified. Any expression that evaluates to a List<String> is usable. |   
+| defaultConfigureOptions | constant   | `listOf("no-asm", "no-weak-ssl-ciphers")`                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| sqlcipherSrcDir         | constant   | `"src"`                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| sqlcipherTargetsDir     | constant   | `"targets"`                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ### Tasks - Inputs and Outputs ###
 
 The table below lists the various tasks that can be registered, and shows their explicitly defined **input** and **output** Gradle Properties available for use in any outside-the-plugin DSL scripts. 
 
-| Task              | Property      | Type          | Description   |
-|-------------------|---------------|---------------|-----------------------|
-| sqlcipherBuildAll | builds        | List of Strings| list of the buildTypes for which targets are produced |
-|                   | targetDirectoriesMap| Map<String, Directory> | Map keyed by buildType of each target subdirectory containing artifacts | 
-| opensslBuildAll   | builds        | List of Strings| list of the buildTypes for which targets are produced |
-|                   | targetDirectoriesMap| Map<String, Directory> | Map keyed by buildType of each target subdirectory containing artifacts | 
+| Task              | Property             | Type                   | Description                                                             |
+|-------------------|----------------------|------------------------|-------------------------------------------------------------------------|
+| sqlcipherBuildAll | builds               | List of Strings        | list of the buildTypes for which targets are produced                   |
+|                   | targetDirectoriesMap | Map<String, Directory> | Map keyed by buildType of each target subdirectory containing artifacts | 
+| opensslBuildAll   | builds               | List of Strings        | list of the buildTypes for which targets are produced                   |
+|                   | targetDirectoriesMap | Map<String, Directory> | Map keyed by buildType of each target subdirectory containing artifacts | 
 
 *Future - add rest of tasks and properties details*
 
