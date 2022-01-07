@@ -2,16 +2,16 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.gradle.ext.ProjectSettings
 
 plugins {
-    kotlin("jvm") version "1.6.0"
+    kotlin("jvm") version "1.5.31"
     `java-gradle-plugin`
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.1"
-    id("com.gradle.plugin-publish") version "0.18.0"
+    id("com.gradle.plugin-publish") version "0.19.0"
     `maven-publish`
 }
 
 val groupName = "com.oldguy.gradle"
 val artifactName = "sqlcipher-openssl-build"
-val versionString = "0.2.5"
+val versionString = "0.3.0"
 group = groupName
 version = versionString
 
@@ -25,13 +25,13 @@ tasks.withType<Test> {
 
 dependencies {
     implementation("org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r")
-    testImplementation(kotlin("test-junit5"))
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:5.0.1")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:5.0.1")
+    testImplementation(kotlin("test"))
+    //testImplementation("io.kotest:kotest-runner-junit5-jvm:5.0.3")
+    //testImplementation("io.kotest:kotest-assertions-core-jvm:5.0.3")
 }
 
 tasks.withType<KotlinCompile>() {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "15"
 }
 
 pluginBundle {
@@ -46,7 +46,7 @@ gradlePlugin {
             // This ID is used by the dependent projects in the plugins block
             id = "$groupName.$artifactName"
             displayName = "OpenSSL and SqlCipher builds"
-            description = "Automated builds of OpenSSL and SqlCipher, 64 bit only, for Windows and Linux build hosts. Multiple target hosts including Android, VStudio, mingw, Linux."
+            description = "Automated builds of OpenSSL and SqlCipher, 64 bit only, for Windows, Linux and Mac build hosts. Multiple target hosts including Android, VStudio, mingw, Linux. Mac, IOS"
             implementationClass = "com.oldguy.gradle.SqlCipherPlugin"
         }
     }

@@ -2,3 +2,18 @@ Issues
 ============================================
 in Git task, clone into a "git" subdirectory of srcDir (done), then copy this structure into each of the build type directories
 to make a copy of the clone for each build type.
+
+Apple Builds
+Mac Big Sur openssl
+    ranlib gets a series of "has no symbols" warnings - ignoring for now.
+    build shows two "Cannot find "WWW::Curl::Easy" in podpath" warnings
+         Used info at https://help.ubidots.com/en/articles/2165289-learn-how-to-install-run-curl-on-windows-macosx-linux
+         to install curl, which also installed homebrew. Unsure what in openssl build is using this
+
+         su Steve
+         ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
+         brew install curl
+
+         May not have been necessary - see if warnings persist.
+         To force newer curl:
+         export PATH=/usr/local/Cellar/curl/7.80.0_1/bin:$PATH

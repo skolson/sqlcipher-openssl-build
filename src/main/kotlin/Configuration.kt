@@ -24,11 +24,11 @@ enum class HostOs {
 }
 
 class BuildTypes {
-    val supportedBuilds = listOf(mingw64, linuxX64, ios64, arm64_v8a, x86_64, vStudio64)
+    val supportedBuilds = listOf(mingw64, linuxX64, arm64_v8a, x86_64, vStudio64, iosX64, iosArm64, macX64)
     private val androidBuilds = listOf(arm64_v8a, x86_64)
     private val windowsBuilds = listOf(mingw64, vStudio64) + androidBuilds
     private val linuxBuilds = linuxX64 + androidBuilds
-    private val macBuilds = listOf(ios64)
+    private val macBuilds = listOf(iosX64, iosArm64, macX64)
 
     val host = HostOs.query()
 
@@ -50,7 +50,9 @@ class BuildTypes {
     companion object {
         const val mingw64 = "mingw64"
         const val linuxX64 = "linuxX64"
-        const val ios64 = "ios64"
+        const val iosX64 = "iosX64"
+        const val iosArm64 = "iosArm64"
+        const val macX64 = "macX64"
         const val arm64_v8a = "arm64-v8a"
         const val x86_64 = "x86_64"
         const val vStudio64 = "vStudio64"
@@ -104,7 +106,7 @@ open class SqlcipherExtension: PluginExtension() {
 
     companion object {
         const val defaultGithubUri = "https://github.com/sqlcipher/sqlcipher"
-        const val defaultVersion = "4.4.0"
+        const val defaultVersion = "4.5.0"
         private const val srcDir = "srcSqlCipher"
         const val targetsDir = "targets"
 
@@ -172,6 +174,8 @@ open class ToolsExtension: PluginExtension() {
         private set
     lateinit var windows: WindowsToolExtension
         private set
+    lateinit var ios: IosToolExtension
+        private set
 
     val bashPerl = "perl"
 
@@ -179,6 +183,7 @@ open class ToolsExtension: PluginExtension() {
         fun createExtensions(sqlcipher: SqlcipherExtension): ToolsExtension {
             val ext: ToolsExtension = (sqlcipher as ExtensionAware).extensions.create("tools", ToolsExtension::class.java)
             ext.android = (ext as ExtensionAware).extensions.create("android", AndroidToolExtension::class.java)
+            ext.ios = (ext as ExtensionAware).extensions.create("ios", IosToolExtension::class.java)
             ext.windows = (ext as ExtensionAware).extensions.create("windows", WindowsToolExtension::class.java)
             return ext
         }
@@ -309,8 +314,14 @@ open class AndroidToolExtension {
     }
 }
 
+open class IosToolExtension {
+    var platformsLocation = "/Applications/Xcode.app/Contents/Developer/Platforms"
+    var sdkVersion = "14"
+    var sdkVersionMinimum = "14"
+}
+
 /**
- * OpenSSL 1.1.1 specific options used by the build process.  Source can be downloaded using a git clone, or by
+ * OpenSSL options used by the build process.  Source can be downloaded using a git clone, or by
  * zip/tar download and extract.  The appropriate PERL must also be available
  */
 open class OpensslExtension {
@@ -330,7 +341,7 @@ open class OpensslExtension {
     companion object {
         const val defaultGithubUri = "https://github.com/openssl/openssl"
         const val defaultGithubUriArchive = "${defaultGithubUri}/archive/"
-        const val defaultTagName = "OpenSSL_1_1_1h"
+        const val defaultTagName = "openssl_3.0.1"
         const val openSslSrcDir = "srcOpenssl"
         const val opensslTargetsDir = "targets"
         val defaultConfigureOptions = listOf("no-asm", "no-weak-ssl-ciphers")
@@ -351,10 +362,14 @@ open class OpensslExtension {
                 "no-dsa", "no-dh", "no-ec", "no-ecdsa", "no-tls1",
                 "no-rfc3779", "no-whirlpool", "no-srp",
                 "no-mdc2", "no-ecdh", "no-engine", "no-srtp")
+        val iosConfigureOptions = listOf(
+            "no-dso", "no-async", "no-shared"
+        )
         val smallOptionsMap = mapOf(
             "arm64-v8a" to nonWindowsOptions + smallConfigureOptions,
             "x86_64" to nonWindowsOptions + smallConfigureOptions,
             "vStudio64" to smallConfigureOptions,
+            "iosArm64" to smallConfigureOptions + iosConfigureOptions
         )
 
     }

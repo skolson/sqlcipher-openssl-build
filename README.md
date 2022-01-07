@@ -6,18 +6,21 @@ This plugin is very early in its lifecycle. There is **lots** of opportunity for
 
 At a high level, this is current status and near-term plans for the plugin. See below for details/
 - 64 bit builds only on all platforms. No current plans for 32 bit builds
-- Windows builds are working
+- Windows builds
     - Visual Studio 2019 Community Edition
     - Mingw64 using MSYS2 and a variety of installed MSYS2 packages
     - Android 64 bit (arm64_v8a, x86_64) builds using NDK 21.3.6528147 (r20b) 
     - Android 64 bit (arm64_v8a, x86_64) builds using NDK 22.1.7171670 (r21b)
     - Openssl 1.1.k and earlier has an issue with android NDK r22 and later. See [OpenSSL Github pull 13694](https://github.com/openssl/openssl/pull/13694). The current 3.0.0 beta has the required fix. So to use the newer NDK versions, use 3.x of openssl. The fix is also backported and merged, so should be available in 1.1.1l or later. 
     - Android 64 bit (arm64_v8a, x86_64) builds using NDK 23.0.7599858 (r23)
-- Linux builds on Ubuntu are working
+- Linux builds on Ubuntu
     - linuxX64 using gcc toolchain
     - Android 64 bit (arm64_v8a, x86_64) builds using NDK 21.3.6528147 (r20b)
-- MacOS builds pending
+- MacOS builds
     - ios64
+    - iosArm64
+    - macX64 - mac on intel
+    - macM1 - future
 - Published in the Gradle plugin repository under name `sqlcipher-openssl-build` 
 - Android configuration - easy add of extra source files (JNI wrappers) to standard library  
 
@@ -32,6 +35,7 @@ The plugin successfully performs 64 bit builds of these combinations.  Others ma
 | 1.1.h           | 4.4.2             | 3.33.0         |
 | 3.0.0 beta2     | 4.4.3             | 3.34.1         |
 | 3.0.0           | 4.5.0             | 3.36.0         |
+| 3.0.1           | 4.5.0             | 3.36.0         |
 
 ## OpenSSL
 *From the OpenSSL site:*
@@ -70,14 +74,15 @@ There is some complexity involved with correctly building OpenSSL and SqlCipher 
         - gcc
         - Android NDK arm64_v8a, x86_64
     - MacOS
-        - ios64
-        - MacOS
+        - iosX64 (simulator on intel)
+        - iosArm64 
+        - MacOS 64 bit 
 
 - OpenSSL and Sqlite both offer a rich set of compile options. This plugin will offer some standard option sets for common requirements that are easily selectable and still customizable.
 - Provide additional documentation on platform-specific build details, with initial focus on Windows host builds. 
 
 ## Environments 
-This plugin has been tested with Gradle 7.0.2 and 6.6.1 so far. Older V6.x versions of Gradle should work, but are untested.  Host operating systems tested so far include Windows 10, Ubuntu 14.04, and in near future Mac OS Catalina. Plugin source is Kotlin 1.4.0. As of September 2020 only current versions of SqlCipher (4.4.0) and OpenSSL (1.1.1g, 1.1.1h) have been tested. 
+This plugin has been tested with Gradle up to 7.3.3 so far. Older than V6.6.1 versions of Gradle should work, but are untested.  Host operating systems tested so far include Windows 10 and 11, Ubuntu 14.04, Mac OS Big Sur. Plugin source is Kotlin 1.5.31. 
 
 Windows support is included for three tool chains, each with its own requirements. Windows builds have to be run on a Windows host:
 - Visual Studio 2019 Community Edition
@@ -107,8 +112,11 @@ Windows support is included for three tool chains, each with its own requirement
 Linux support requires the following packages on Ubuntu.  These may need adjustment on other distros:
 - to do
    
-Mac OS support requires        
-- to do
+Mac OS support        
+- OpenSSL 3 build issues warning "Cannot find "WWW::Curl::Easy" in podpath", but still seems to work
+
+IOS support
+- Xcode 13.x standard install used
 
 ## Features
 - Current support is for 64-bit builds only on all platforms.
@@ -117,10 +125,14 @@ Mac OS support requires
     - vStudio64
     - mingw64
     - linuxX64
-    - ios64
     - Android NDK builds
         - arm64_v8a
         - x86_64
+    - Apple Mac builds
+        - macX64 Mac on intel
+        - iosX64 (IOS simulator on intel)
+        - iosArm64 
+
 - one or more of these can be specified. Build types declared that cannot be run on the current Host OS will be skipped.
 - Source for OpenSSL and Sqlcipher can be obtained one of two ways:
     - Git clone and checkout of a specific tag (version). This is by far the slowest of the two options, but creates a usable git local checkout.
@@ -145,7 +157,7 @@ Use the plugins DSL in build.gradle.kts to declare enable the plugin:
 ```
     plugins {
             ...
-            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.2.5"
+            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.3.0"
     }
 ```
 
@@ -161,7 +173,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
         compilerOptions = SqlcipherExtension.defaultCompilerOptions +
             "-DSQLITE_LIKE_DOESNT_MATCH_BLOBS"
 
-        builds("vStudio64", "mingw64", "arm64-v8a", "x86_64", "linuxX64")
+        builds("vStudio64", "mingw64", "arm64-v8a", "x86_64", "linuxX64", "macX64", "iosX64", "iosArm64")
         
         tools {
             windows {
@@ -176,9 +188,13 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
                 ndkVersion = "23.1.7779620"
                 minimumSdk = 26
             }
+            ios {
+                sdkVersion = "15"
+                sdkVersionMinimum = "14"
+            }
         }
         openssl {
-            tagName = "openssl-3.0.0"
+            tagName = "openssl-3.0.1"
             useGit = false
         }
     }
@@ -186,7 +202,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
     ...
 ```
 
-Using this configuration, running Gradle task `sqlcipherBuildAll` will run all the tasks required to perform the designated builds.
+Using this configuration, running Gradle task `sqlcipherBuildAll` will run all the tasks required to perform the designated builds. Only build tasks supported on the host running gradle will be run, others will be skipped.
 
 In the above DSL, SqlCipher 4.5.0 would be built using a source archive (useGit = false) from Github (.zip if running Gradle on windows, .tar.gz if not). The **builds(...)** function indicates Visual Studio 64 bit, MingW64, and two android builds would be performed. These would happen only if gradle is being run on a Windows host. If gradle is being run on a linux host, then only the two android and one linuxX64 builds run. All targets produced would reside in the project buildDir/targets directory, each buildType having its own subdirectory. the project buildDir directory will also contain "srcOpenssl" and one "srcSqlcipher" subdirectory each for OpenSSL and SqlCipher. Each of there will contain one subdirectory for each configured build type, containing source and all respective build artifacts.  
 
@@ -222,7 +238,9 @@ Available Build Types are listed here. Gradle tasks registered are based on thes
 | arm64-v8a      | Windows, Linux   | Uses the Android NDK configured in **tools** DSL to build 64 bit ARM static and shared libraries                                                                                                                                    |
 | x86_64         | Windows, Linux   | Uses the Android NDK configured in **tools** DSL to build 64 bit Intel/AMD static and shared libraries                                                                                                                              |
 | linuxX64       | Linux            | Standard GCC toolchain is used to produce static and shared libraries and the command line utility for sqlcipher. Initially tested on Ubuntu                                                                                        |
-| ios64          | Mac OS           | To be added later                                                                                                                                                                                                                   |
+| iosX64         | Mac OS Big Sur   | Xcode 13.x is used                                                                                                                                                                                                                  |
+| iosArm64       | Mac OS Big Sur   | Xcode 13.x is used                                                                                                                                                                                                                  |
+| macX64         | Mac OS Big Sur   | Xcode 13.x is used                                                                                                                                                                                                                  |
 
 
 Configuration DSL specifies the build types to be performed. Task names specific to a build type contain the build type in the name.  In the names below for these tasks, the build type is abbreviated to *BT*. Note that in the case of SqlCipher, no build-specific Verify tasks are needed, as it uses the same set of tools used by OpenSSL builds, which handles the verifications.   
@@ -264,6 +282,9 @@ sqlcipher {
         android {
             ... optional, android-specific configuration
         }
+        ios {
+            ... optional, can specifiy IOS SDK version requirements. 
+        }
     }
 }
 ``` 
@@ -279,6 +300,7 @@ Each of these configuration sections is a Gradle Extension class. the Extension 
 | ToolsExtension       | Mostly options indicating where tools are located. Owns platform-specific subsections.     |
 | WindowsToolExtension | Locations of windows-specific tools. Property of ToolsExtension                            |
 | AndroidToolExtension | Android-specific configuration for the SDK and NDK to be used. Property of ToolsExtension  | 
+| IosToolExtension     | IOS-specific configuration for the IOS SDK to be used. Property of ToolsExtension          | 
 
 #### tools DSL subsection #####
 
@@ -299,6 +321,9 @@ Each option in the `tools` block is below.  The type indicates whether the optio
 | androidSdkLocation         | value     | Specify the absolute path to the directory where the Android SDK is installed. Example: `"D:\\Android\\sdk"`                                                                                                                                                                                                                                                                                                        |
 | androidNdkVersion          | value     | String value matching a subdirectory of `androidSdkLocation`. Example: `"21.3.6528147"` for version r20b of the NDK . Note that the plugin assumes a standard NDK install for locating the underlying llvm toolchain used by ndk-build.cmd.                                                                                                                                                                         |
 | androidMinimumSdk          | int value | Specify the minimum sdk version android build will run on. Used by both Android NDK builds and OpenSSL configuration for android. Example: `23`                                                                                                                                                                                                                                                                     |
+| **IOS** settings           |
+| sdkVersion                 | value     | default is "14"                                                                                                                                                                                                                                                                                                                                                                                                     |
+| sdkVersionMinimum          | value     | default is "14". Used by OpenSSL build                                                                                                                                                                                                                                                                                                                                                                              |
 
 #### openssl DSL subsection #####
 

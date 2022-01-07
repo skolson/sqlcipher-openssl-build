@@ -1,7 +1,6 @@
 package com.oldguy.gradle
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -29,6 +28,15 @@ abstract class BuilderTask(@get:Input val buildType: String): DefaultTask() {
     abstract val androidMinimumSdk: Property<Int>
 
     @get:Input
+    abstract val platformsLocation: Property<String>
+
+    @get:Input
+    abstract val iosMinimumSdk: Property<String>
+
+    @get:Input
+    abstract val iosSdk: Property<String>
+
+    @get:Input
     abstract val androidNdkRoot: Property<File>
 
     @get:Input
@@ -45,6 +53,8 @@ abstract class BuilderTask(@get:Input val buildType: String): DefaultTask() {
     val mingwPatterns = listOf("*.a", "*.dll", "*.pc", "*.rc", "*.def", "*.o")
     @Internal
     val linuxPatterns = listOf("sqlcipher", "*.a", "*.so", "*.pc", "*.map", "*.so.*")
+    @Internal
+    val applePatterns = listOf("sqlcipher", "*.a", "*.pc")
     @Internal
     val make = "make"
     @Internal
@@ -101,6 +111,9 @@ abstract class BuilderTask(@get:Input val buildType: String): DefaultTask() {
         vStudioEnvFilePath.set(tools.windows.vStudioEnvFile.absolutePath)
         androidMinimumSdk.set(tools.android.minimumSdk)
         androidNdkRoot.set(tools.android.ndkRoot)
+        iosMinimumSdk.set(tools.ios.sdkVersionMinimum)
+        platformsLocation.set(tools.ios.platformsLocation)
+        iosSdk.set(tools.ios.sdkVersion)
         r22OrLater = tools.android.r22OrLater
         runner = Runner(project, host, windows)
     }

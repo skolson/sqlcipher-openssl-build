@@ -3,7 +3,6 @@ package com.oldguy.gradle
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.*
 import java.io.File
 import javax.inject.Inject
@@ -60,6 +59,15 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
             }
             BuildTypes.arm64_v8a,
             BuildTypes.x86_64 -> androidBuild(buildSrcDir, buildType)
+            BuildTypes.macX64 -> {
+                linuxScript(buildSrcDir, "darwin64-x86_64-cc")
+                applePatterns + "*.dylib"
+            }
+            BuildTypes.iosX64,
+            BuildTypes.iosArm64 -> {
+                iosScript(buildSrcDir, buildType == BuildTypes.iosX64)
+                applePatterns
+            }
             else ->
                 throw GradleException("Unsupported OpenSSL buildType: $buildType")
         }
@@ -137,8 +145,35 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
         return linuxPatterns
     }
 
+    /**
+     * Use this for IOS builds
+     */
+    private fun iosScript(srcDir: File, simulator: Boolean, path: String = "") {
+        val platform = if (simulator) "iPhoneSimulator" else "iPhoneOS"
+        val arch = if (simulator) iosTargets[0] else iosTargets[1]
+        val crossPath = "${platformsLocation.get()}/$platform.platform/Developer"
+        val shFilename = createPluginFile(srcDir, "$defaultFileName.sh") {
+            """
+            #!/bin/zsh    
+            export PLATFORM=$platform
+            export CC=clang;
+            export PATH="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin:${'$'}PATH"
+            ./Configure $arch $configureOptionsString -isysroot $crossPath/SDKs/$platform.sdk -miphoneos-version-min=${iosMinimumSdk.get()}
+            $make all
+            """.trimIndent()
+        }
+
+        runner.command(srcDir, "./$shFilename") {
+            it.workingDir(srcDir)
+            if (path.isNotEmpty())
+                it.environment("PATH", path)
+        }
+    }
+
+
     companion object {
         val androidTargets = listOf("android-arm64", "android64-x86_64")
+        val iosTargets = listOf("iossimulator-xcrun", "ios64-cross")
         // use ./Configure LIST to find these
     }
 }

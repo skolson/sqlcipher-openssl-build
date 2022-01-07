@@ -137,9 +137,9 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
                     }
                     BuildTypes.linuxX64 -> {
                     }
-                    BuildTypes.ios64 -> {
+                    BuildTypes.iosArm64,
+                    BuildTypes.iosX64 -> {
                     }
-                    else -> throw GradleException("Verify: unsupported buildType: $buildType")
                 }
             }
         }
