@@ -1,19 +1,19 @@
 package com.oldguy.gradle
 
-import org.gradle.api.GradleException
 import java.io.File
 
 /**
  * Android NDK using ndk-build. May end up refactoring this to be an extension or part of one in the config DSL.
  * Currently it is just an android and ndk-build specific helper.
  */
-class AndroidSqlCipher(
+class SqlCipherAndroid(
         private val runner:Runner,
         private val srcDir: File,
         private val buildType: String,
         androidMinimumSdk: Int)
 {
-    private val host = HostOs.query()
+    private val host get() = HostOs.query()
+    private val sqlite3 = SqlcipherExtension.moduleName
     var outputDir = srcDir
         private set
 
@@ -33,7 +33,7 @@ class AndroidSqlCipher(
     )
     private val makeVars = mapOf(
             "LOCAL_MODULE" to "libsqlcipher",
-            "LOCAL_SRC_FILES" to "sqlite3.c",
+            "LOCAL_SRC_FILES" to "$sqlite3.c",
             "LOCAL_LDLIBS" to "-llog",
             "LOCAL_LDFLAGS" to "-fuse-ld=bfd"  // only use this for NDK r21 and earlier
     )
@@ -53,17 +53,21 @@ class AndroidSqlCipher(
               androidNdkPath: String,
               r22OrLater: Boolean): String
     {
-        buildAmalgamation(compilerOptionsString)
+        SqlCipherBuild.buildAmalgamation(
+            srcDir,
+            runner,
+            buildType
+        )
         val cFlags = StringBuilder()
         requiredCFlags.forEach { cFlags.append("$it ") }
         cFlags.append(compilerOptionsString)
 
         BuilderTask.createPluginFile(srcDir, pluginAppMakeFileName, false) {
-            val b = StringBuilder()
-            appVars.forEach {
-                b.append("${it.key} := ${it.value} ${runner.lineSeparator}")
+            buildString {
+                appVars.forEach {
+                    append("${it.key} := ${it.value} ${runner.lineSeparator}")
+                }
             }
-            b.toString()
         }
 
         val opensslModule = "libcrypto"
@@ -121,35 +125,6 @@ class AndroidSqlCipher(
             }
             runner.command(srcDir, "./$shFilename") { }
         }
-    }
-
-    /**
-     * This builds the amalgamation sqlite3.c and sqlite3.h from the SqlCipher source, if sqlite3.c already exists in
-     * the build directory this build step is skipped
-     */
-    private fun buildAmalgamation(compilerOptionsString: String) {
-        val amalgamation = "sqlite3.c"
-        if (srcDir.resolve(amalgamation).exists()) return
-
-        val buildArg = when (buildType) {
-            BuildTypes.arm64_v8a -> "aarch64"
-            BuildTypes.x86_64 -> BuildTypes.x86_64
-            else -> throw GradleException("Unsupported configure script build type: $buildType")
-        } + "-linux"
-        val cmdLine = "./configure --build=$buildArg --enable-tempstore=yes --disable-tcl --with-crypto-lib=none " +
-                "CFLAGS=\"${compilerOptionsString}\""
-
-        val shFilename = BuilderTask.createPluginFile(srcDir, "sqlite-amalgamation.sh") {
-            """
-            #!/bin/sh
-            $cmdLine
-            make $amalgamation
-            """.trimIndent()
-        }
-
-        runner.logger.info("create amalgamation source: $amalgamation")
-        runner.command(srcDir, "./$shFilename") { }
-        runner.logger.info("Amalgamation source created: $amalgamation")
     }
 
     companion object {

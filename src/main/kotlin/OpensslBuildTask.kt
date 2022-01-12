@@ -29,6 +29,13 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
     @get:Internal
     abstract val includeDirectory: DirectoryProperty
 
+    private lateinit var config: AppleToolExtension
+
+    override fun setToolsProperties(tools: ToolsExtension) {
+        super.setToolsProperties(tools)
+        config = tools.apple
+    }
+
     fun setup(srcDir: File, targetDir: File,
               configureOptionList: List<String>) {
         configureOptions.set(configureOptionList)
@@ -65,7 +72,7 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
             }
             BuildTypes.iosX64,
             BuildTypes.iosArm64 -> {
-                iosScript(buildSrcDir, buildType == BuildTypes.iosX64)
+                iosScript(buildSrcDir, buildType)
                 applePatterns
             }
             else ->
@@ -118,7 +125,7 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
         val arch = when (buildType) {
             BuildTypes.arm64_v8a -> androidTargets[0]
             BuildTypes.x86_64 -> androidTargets[1]
-            else -> throw IllegalArgumentException("Unsupported android build type: $buildType")
+            else -> throw GradleException("Unsupported android build type: $buildType")
         }
         val configureCommand = StringBuilder()
                 .append("./Configure ")
@@ -148,17 +155,14 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
     /**
      * Use this for IOS builds
      */
-    private fun iosScript(srcDir: File, simulator: Boolean, path: String = "") {
-        val platform = if (simulator) "iPhoneSimulator" else "iPhoneOS"
-        val arch = if (simulator) iosTargets[0] else iosTargets[1]
-        val crossPath = "${platformsLocation.get()}/$platform.platform/Developer"
+    private fun iosScript(srcDir: File, buildType: String, path: String = "") {
+        val arch = iosTargets[buildType]
         val shFilename = createPluginFile(srcDir, "$defaultFileName.sh") {
             """
             #!/bin/zsh    
-            export PLATFORM=$platform
             export CC=clang;
-            export PATH="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin:${'$'}PATH"
-            ./Configure $arch $configureOptionsString -isysroot $crossPath/SDKs/$platform.sdk -miphoneos-version-min=${iosMinimumSdk.get()}
+            export PATH="${config.toolChainPath}:${'$'}PATH"
+            ./Configure $arch $configureOptionsString ${config.optionsString(buildType)}
             $make all
             """.trimIndent()
         }
@@ -173,7 +177,10 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
 
     companion object {
         val androidTargets = listOf("android-arm64", "android64-x86_64")
-        val iosTargets = listOf("iossimulator-xcrun", "ios64-cross")
+        val iosTargets = mapOf(
+            "iosX64" to "iossimulator-xcrun",
+            "iosArm64" to "ios64-cross"
+        )
         // use ./Configure LIST to find these
     }
 }

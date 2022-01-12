@@ -76,9 +76,10 @@ There is some complexity involved with correctly building OpenSSL and SqlCipher 
     - MacOS
         - iosX64 (simulator on intel)
         - iosArm64 
-        - MacOS 64 bit 
+        - MacOS 64 bit intel 
+        - Android NDK builds not currently supported, but easily could be
 
-- OpenSSL and Sqlite both offer a rich set of compile options. This plugin will offer some standard option sets for common requirements that are easily selectable and still customizable.
+- OpenSSL and Sqlite both offer a rich set of compile options. The plugin offers some standard option sets for common requirements that are easily selectable and still customizable. 
 - Provide additional documentation on platform-specific build details, with initial focus on Windows host builds. 
 
 ## Environments 
@@ -109,14 +110,13 @@ Windows support is included for three tool chains, each with its own requirement
         - NDK (side-by-side) version r20b through r23b tested
         - CMake 3.18.1 (default with newer NDKs)
 
-Linux support requires the following packages on Ubuntu.  These may need adjustment on other distros:
-- to do
-   
 Mac OS support        
 - OpenSSL 3 build issues warning "Cannot find "WWW::Curl::Easy" in podpath", but still seems to work
+- all Apple builds use the standard SDK path structure and the default links for each platform, so the SDK version used is determined by the SDK install. Explicit configuration of an older installed SDK is not supported, but would be an easy pull request if desired)
 
 IOS support
 - Xcode 13.x standard install used
+- In the current plugin only iPhoneOS 64 bit, and iosSimulator build types are supported. 
 
 ## Features
 - Current support is for 64-bit builds only on all platforms.
@@ -170,8 +170,14 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
     sqlcipher {
         useGit = false
         version = "4.5.0"
-        compilerOptions = SqlcipherExtension.defaultCompilerOptions +
-            "-DSQLITE_LIKE_DOESNT_MATCH_BLOBS"
+        compilerOptions = SqlcipherExtension.defaultCompilerOptions
+        buildCompilerOptions = mapOf(
+            "x86_64" to SqlcipherExtension.androidCompilerOptions, 
+            "arm64-v8a" to SqlcipherExtension.androidCompilerOptions, 
+            "iosX64" to SqlcipherExtension.iosCompilerOptions, 
+            "iosArm64" to SqlcipherExtension.iosCompilerOptions, 
+            "macX64" to SqlcipherExtension.macOsCompilerOptions
+        )
 
         builds("vStudio64", "mingw64", "arm64-v8a", "x86_64", "linuxX64", "macX64", "iosX64", "iosArm64")
         
@@ -188,7 +194,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
                 ndkVersion = "23.1.7779620"
                 minimumSdk = 26
             }
-            ios {
+            apple {
                 sdkVersion = "15"
                 sdkVersionMinimum = "14"
             }
@@ -206,9 +212,11 @@ Using this configuration, running Gradle task `sqlcipherBuildAll` will run all t
 
 In the above DSL, SqlCipher 4.5.0 would be built using a source archive (useGit = false) from Github (.zip if running Gradle on windows, .tar.gz if not). The **builds(...)** function indicates Visual Studio 64 bit, MingW64, and two android builds would be performed. These would happen only if gradle is being run on a Windows host. If gradle is being run on a linux host, then only the two android and one linuxX64 builds run. All targets produced would reside in the project buildDir/targets directory, each buildType having its own subdirectory. the project buildDir directory will also contain "srcOpenssl" and one "srcSqlcipher" subdirectory each for OpenSSL and SqlCipher. Each of there will contain one subdirectory for each configured build type, containing source and all respective build artifacts.  
 
-The sqlcipher compilerOptions are derived from a default list with one additional custom option in this example.  Any kotlin expression that evaluates to a List<String> is valid.
+The sqlcipher compilerOptions are set to a default list above. These options are used by all builds regardless of build type.  Any kotlin expression that evaluates to a List<String> is valid. The intent is each option is one entry in the list. These can be SQLITE option definitions or other compiler command line options. See the default definitions below for an example of how this can be specified. 
 
-compilerOptions assignment above designates a set of default options, plus one addition. See the Reference section below for details.  
+The sqlcipher buildCompilerOptions value is a map keyed by build type, of compiler options only for a specific build type.  If options for a build type are found, they are appended after the compilerOptions.
+
+compilerOptions assignment above uses pre-defined defaults used for all platforms. buildCompilerOptions is also with a map of defaults. See the Reference section below for details on the defaults.  
 
 **Note** - The build process is kinda long for OpenSSL and has to happen for each target. On a decent but not high end build machine OpenSSL for mingw64 takes about 5 minutes to build. Linux OpenSSL builds are significantly faster. SqlCipher builds much quicker, but patience is required when running lots of target builds in one Gradle run. 
 
@@ -293,14 +301,14 @@ Since both openssl and sqlcipher sections rely on tools, the tools section is de
 
 Each of these configuration sections is a Gradle Extension class. the Extension classes are listed below.  Some have constant values that are available for use in the DSL expressions if desired.
 
-| Extension Class Name | Description                                                                                |
-|----------------------|--------------------------------------------------------------------------------------------|
-| SqlcipherExtension   | Configuration options for SqlCipher. The other extensions are properties of this extension |
-| OpensslExtension     | Configuration options for OpenSSL builds.                                                  |
-| ToolsExtension       | Mostly options indicating where tools are located. Owns platform-specific subsections.     |
-| WindowsToolExtension | Locations of windows-specific tools. Property of ToolsExtension                            |
-| AndroidToolExtension | Android-specific configuration for the SDK and NDK to be used. Property of ToolsExtension  | 
-| IosToolExtension     | IOS-specific configuration for the IOS SDK to be used. Property of ToolsExtension          | 
+| Extension Class Name | Description                                                                                  |
+|----------------------|----------------------------------------------------------------------------------------------|
+| SqlcipherExtension   | Configuration options for SqlCipher. The other extensions are properties of this extension   |
+| OpensslExtension     | Configuration options for OpenSSL builds.                                                    |
+| ToolsExtension       | Mostly options indicating where tools are located. Owns platform-specific subsections.       |
+| WindowsToolExtension | Locations of windows-specific tools. Property of ToolsExtension                              |
+| AndroidToolExtension | Android-specific configuration for the SDK and NDK to be used. Property of ToolsExtension    | 
+| AppleToolExtension   | Apple-specific configuration for the MacOS or IOS SDK to be used. Property of ToolsExtension | 
 
 #### tools DSL subsection #####
 
@@ -308,7 +316,7 @@ Each option in the `tools` block is below.  The type indicates whether the optio
 
 | Name                       | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                         |
 |----------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **windows** settings       |
+| **windows** settings       |           |                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | visualStudioInstall        | value     | Specify the absolute path to the directory where Visual Studio is installed. See 'defaultVisualStudioInstall' for the default value used if this is not specified, it is an example of a typical value.                                                                                                                                                                                                             |
 | defaultVisualStudioInstall | constant  | `"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\"`                                                                                                                                                                                                                                                                                                                                         |  
 | sdkInstall                 | value     | Specify the absolute path to the directory where Windows SDK is installed. See 'defaultWindowsSdkInstall' for the default value used if this is not specified, it is an example of a typical value.                                                                                                                                                                                                                 |
@@ -317,13 +325,15 @@ Each option in the `tools` block is below.  The type indicates whether the optio
 | defaultSdkLibVersion       | constant  | `"10.0.18362.0"` for a version used with Visual Studio 2019 Community Edition.                                                                                                                                                                                                                                                                                                                                      |
 | perlInstallDirectory       | value     | Specify the absolute path to the directory where a Windows version of PERL is installed.  Either Strawberry Perl or ActiveState Perl should work fine. Example: `"D:\\Strawberry\\perl"`                                                                                                                                                                                                                            |
 | msys2InstallDirectory      | value     | Specify the absolute path to the directory MSYS2 is installed in.  Don't install MSYS2 in an absolute path that has any embedded blanks, headaches ensue. Example: `msys2InstallDirectory = "D:\\msys64"`. Also note that as described elsewhere, a number of MSYS2 packages must be installed using `pacman` at the MSYS2 64 bit command prompt before verify and build tasks using build type `mingw64` can work. |
-| **android** settings       |
+| **Android** settings       |           |                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | androidSdkLocation         | value     | Specify the absolute path to the directory where the Android SDK is installed. Example: `"D:\\Android\\sdk"`                                                                                                                                                                                                                                                                                                        |
 | androidNdkVersion          | value     | String value matching a subdirectory of `androidSdkLocation`. Example: `"21.3.6528147"` for version r20b of the NDK . Note that the plugin assumes a standard NDK install for locating the underlying llvm toolchain used by ndk-build.cmd.                                                                                                                                                                         |
 | androidMinimumSdk          | int value | Specify the minimum sdk version android build will run on. Used by both Android NDK builds and OpenSSL configuration for android. Example: `23`                                                                                                                                                                                                                                                                     |
-| **IOS** settings           |
+| **Apple** settings         |           |                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| platformsLocation          | String    | default is /Applications/Xcode.app/Contents/Developer                                                                                                                                                                                                                                                                                                                                                               |
 | sdkVersion                 | value     | default is "14"                                                                                                                                                                                                                                                                                                                                                                                                     |
 | sdkVersionMinimum          | value     | default is "14". Used by OpenSSL build                                                                                                                                                                                                                                                                                                                                                                              |
+| platforms                  | Map       | Maps build types to Apple SDK platform names. Default is: `mapOf("iosX64" to "iPhoneSimulator", "iosArm64" to "iPhoneOS", "macX64" to "MacOSX")`                                                                                                                                                                                                                                                                    |
 
 #### openssl DSL subsection #####
 
@@ -353,23 +363,116 @@ If in the future other common option sets develop during use, they will be added
 
 Each option in the `sqlcipher` block is below. OpenSSL build process uses a PERL configure script to verify the build environment and generate the correct makefile artifacts used by a subsequent make run. The options below allow options to be supplied to that process.  
    
-| Name                    | Type       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-|-------------------------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| buildSqlCipher          | true/false | Default true, controls whether build tasks for sqlcipher are registered. Specify false if only openssl is desired.                                                                                                                                                                                                                                                                                                                                                   | 
-| srcDirectory            | value      | The subdirectory in the Gradle Project BuildDir that wll contain all source retrieved or generated by the plugin. See `sqlcipherSrcDir` for an example value and the default if this is not speficied.                                                                                                                                                                                                                                                               |
-| targetsDirectory        | value      | The subdirectory in the Gradle Project BuildDir that wll contain a subdirectory for each build type, which will contain build artifacts produced for that build type. See `sqlcipherTargetsDir` for an example and the default value used if this is not specified.                                                                                                                                                                                                  | 
-| builds                  | function   | Accepts a list of strings.  Must be one or more of the supported Build Types (see above). Specifying build types not supported by the host OS running gradle causes those build types to be skipped. Specifying anything other than a valid buildType in the list of arguments causes the plugin to punt.                                                                                                                                                            |
-| useGit                  | true/false | Specify true to use Git to retrieve source. Default is false, which uses HTTPS download.  Only specify this if a local git checkout of a specific tag is useful after doing build for non-plugin work, it is noticeably slower than the download and extract option.                                                                                                                                                                                                 |
-| githubUri               | value      | Required if `useGit = true`. See `defaultGithubUri` for the value used by default if not specified.                                                                                                                                                                                                                                                                                                                                                                  |
-| version                 | value      | Required by both source options. Specify the Version for the release to be retrieved. See `defaultVersion` for en example value, and the one used if this is not specified. SqlCipher uses the convention `tagName="v$version"`, so the plugin derives the GIT tag name and the download archive name from the version value.                                                                                                                                        | 
-| defaultVersion          | constant   | `"4.4.0"`                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| sourceURI               | value      | URI used by the download task to retrieve a source archive file. Both `.zip` and `.tar.gz` are supported. See `defaultGithubUriArchive` for an example, and the value used if not specified.                                                                                                                                                                                                                                                                         |
-| defaultGithubUri        | constant   | `"https://github.com/sqlcipher/sqlcipher"`                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| defaultGithubUriArchive | constant   | `"${defaultGithubUri}/archive/"`                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| configureOptions        | value      | List<String> of options to supply to the openssl Configure perl script. Any of the options supported by OpenSSL are valid, see [OpenSSL Compilation Wiki](https://wiki.openssl.org/index.php/Compilation_and_Installation) for details. See `defaultConfigureOptions` for an example specification using the kotlin `listof()` function for an example, and for the values used if this is not specified. Any expression that evaluates to a List<String> is usable. |   
-| defaultConfigureOptions | constant   | `listOf("no-asm", "no-weak-ssl-ciphers")`                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| sqlcipherSrcDir         | constant   | `"src"`                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| sqlcipherTargetsDir     | constant   | `"targets"`                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Name                    | Type       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+|-------------------------|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| buildSqlCipher          | true/false | Default true, controls whether build tasks for sqlcipher are registered. Specify false if only openssl is desired.                                                                                                                                                                                                                                                                                                                                                                                                       | 
+| srcDirectory            | value      | The subdirectory in the Gradle Project BuildDir that wll contain all source retrieved or generated by the plugin. See `sqlcipherSrcDir` for an example value and the default if this is not speficied.                                                                                                                                                                                                                                                                                                                   |
+| targetsDirectory        | value      | The subdirectory in the Gradle Project BuildDir that wll contain a subdirectory for each build type, which will contain build artifacts produced for that build type. See `sqlcipherTargetsDir` for an example and the default value used if this is not specified.                                                                                                                                                                                                                                                      | 
+| builds                  | function   | Accepts a list of strings.  Must be one or more of the supported Build Types (see above). Specifying build types not supported by the host OS running gradle causes those build types to be skipped. Specifying anything other than a valid buildType in the list of arguments causes the plugin to punt.                                                                                                                                                                                                                |
+| useGit                  | true/false | Specify true to use Git to retrieve source. Default is false, which uses HTTPS download.  Only specify this if a local git checkout of a specific tag is useful after doing build for non-plugin work, it is noticeably slower than the download and extract option.                                                                                                                                                                                                                                                     |
+| githubUri               | value      | Required if `useGit = true`. See `defaultGithubUri` for the value used by default if not specified.                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| version                 | value      | Required by both source options. Specify the Version for the release to be retrieved. See `defaultVersion` for en example value, and the one used if this is not specified. SqlCipher uses the convention `tagName="v$version"`, so the plugin derives the GIT tag name and the download archive name from the version value.                                                                                                                                                                                            | 
+| defaultVersion          | constant   | `"4.4.0"`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| sourceURI               | value      | URI used by the download task to retrieve a source archive file. Both `.zip` and `.tar.gz` are supported. See `defaultGithubUriArchive` for an example, and the value used if not specified.                                                                                                                                                                                                                                                                                                                             |
+| defaultGithubUri        | constant   | `"https://github.com/sqlcipher/sqlcipher"`                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| defaultGithubUriArchive | constant   | `"${defaultGithubUri}/archive/"`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| configureOptions        | value      | List<String> of compiler command line options to supply to the sqlcipher make file. Any of the options supported by SqlCipher are valid as well as any other compiler options. See `defaultConfigureOptions` for an example specification using the kotlin `listof()` function for an example, and for the values used if this is not specified. Any expression that evaluates to a List<String> is usable. |   
+| defaultConfigureOptions | constant   | `listOf("no-asm", "no-weak-ssl-ciphers")`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| sqlcipherSrcDir         | constant   | `"src"`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| sqlcipherTargetsDir     | constant   | `"targets"`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+
+### SqlCipher default options ###
+
+The **SqlcipherExtension** class has static predefined defaults for the many SqlCipher build options. These are listed below.
+
+**sqlcipherRequiredOptions**
+
+If these options are not used, SqlCipher build fails.    
+
+    `listOf("-DSQLITE_HAS_CODEC","-DSQLCIPHER_CRYPTO_OPENSSL")`
+
+**defaultCompilerOptions**
+
+These are defauls for any platform build. See the Sqlite documentation for all the ones that can be used as well as details about each of the options below.
+
+    sqlcipherRequiredOptions + listOf(
+            "-DNDEBUG=1",
+            "-DSQLITE_OMIT_DEPRECATED",
+            "-DSQLITE_OMIT_TRACE",
+            "-DSQLITE_OMIT_TCL_VARIABLE",
+            "-DSQLITE_OMIT_PROGRESS_CALLBACK",
+            "-DSQLITE_DEFAULT_MEMSTATUS=0",
+            "-DSQLITE_DEFAULT_WAL_SYNCHRONOUS=1",
+            "-DSQLITE_OMIT_SHARED_CACHE",
+            "-DSQLITE_ENABLE_COLUMN_METADATA",
+            "-DSQLITE_MAX_EXPR_DEPTH=0",
+            "-DSQLITE_DQS=0",
+            "-DSQLITE_DEFAULT_FOREIGN_KEYS=1",
+            "-DSQLITE_ENABLE_RTREE",
+            "-DSQLITE_ENABLE_STAT3",
+            "-DSQLITE_ENABLE_STAT4",
+            "-DSQLITE_ENABLE_FTS3_PARENTHESIS",
+            "-DSQLITE_ENABLE_FTS4",
+            "-DSQLITE_ENABLE_FTS5",
+            "-DSQLITE_INTROSPECTION_PRAGMAS"
+        )
+
+**androidCompilerOptions**
+
+These are defaults for Android builds
+
+    listOf(
+            "-DSQLITE_SOUNDEX",
+            "-DHAVE_USLEEP=1",
+            "-DSQLITE_MAX_VARIABLE_NUMBER=99999",
+            "-DSQLITE_TEMP_STORE=3",
+            "-DSQLITE_DEFAULT_JOURNAL_SIZE_LIMIT=1048576",
+            "-DSQLITE_ENABLE_MEMORY_MANAGEMENT=1",
+            "-DSQLITE_ENABLE_UNLOCK_NOTIFY",
+            "-DSQLITE_ENABLE_DBSTAT_VTAB",
+            "-DSQLITE_OMIT_AUTORESET",
+            "-DSQLITE_OMIT_BUILTIN_TEST",
+            "-DSQLITE_OMIT_LOAD_EXTENSION"
+        )
+
+
+**appleCompilerOptions**
+
+These are defaults of Apple builds
+
+    listOf(
+            "-fno-common",
+            "-DSQLITE_ENABLE_API_ARMOR",
+            "-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT",
+            "-DSQLITE_OMIT_AUTORESET",
+            "-DSQLITE_OMIT_BUILTIN_TEST",
+            "-DSQLITE_OMIT_LOAD_EXTENSION",
+            "-DSQLITE_SYSTEM_MALLOC",
+            "-DSQLITE_THREADSAFE=2",
+            "-DSQLITE_OS_UNIX=1"
+        )
+
+**macOsCompilerOptions**
+
+These are Mac OSX default options. The locking style setting is specific to Macs in Sqlite, evidently is a   
+
+    appleCompilerOptions + 
+    listOf(
+            "-DSQLITE_ENABLE_LOCKING_STYLE=1"
+    )
+
+**iosCompilerOptions**
+
+These are defaults for both IOS and the IOS Simulator on intel.
+
+    appleCompilerOptions + 
+    listOf(
+            "-DSQLITE_MAX_MMAP_SIZE=0",
+            "-DSQLITE_ENABLE_LOCKING_STYLE=0",
+            "-DSQLITE_TEMP_STORE=3",
+            "-Wno-#warnings"
+    )
+
 
 ### Tasks - Inputs and Outputs ###
 

@@ -24,7 +24,7 @@ enum class HostOs {
 }
 
 class BuildTypes {
-    val supportedBuilds = listOf(mingw64, linuxX64, arm64_v8a, x86_64, vStudio64, iosX64, iosArm64, macX64)
+    val supportedBuilds get() = BuildTypes.supportedBuilds
     private val androidBuilds = listOf(arm64_v8a, x86_64)
     private val windowsBuilds = listOf(mingw64, vStudio64) + androidBuilds
     private val linuxBuilds = linuxX64 + androidBuilds
@@ -56,6 +56,7 @@ class BuildTypes {
         const val arm64_v8a = "arm64-v8a"
         const val x86_64 = "x86_64"
         const val vStudio64 = "vStudio64"
+        val supportedBuilds = listOf(mingw64, linuxX64, arm64_v8a, x86_64, vStudio64, iosX64, iosArm64, macX64)
     }
 }
 
@@ -64,6 +65,10 @@ abstract class PluginExtension {
 
 }
 
+/**
+ * Gradle extension for DSL configuration of the plugin. Contains an extension specific to OpenSSSL, one containing
+ * tools configuration for the supported tool chains, and the configurable options that can be set by the DSL.
+ */
 open class SqlcipherExtension: PluginExtension() {
 
     lateinit var opensslExt: OpensslExtension
@@ -78,9 +83,26 @@ open class SqlcipherExtension: PluginExtension() {
     var version = defaultVersion
     val tagName get() = "v$version"
     var compilerOptions = defaultCompilerOptions
+
+    /**
+     * Map of additional options to be passed to the C compiler, keyed by build type. Any found for a specific
+     * build type will be added after the options specified in [compilerOptions]. Entries for an unsupported build type
+     * will cause an exception. Entries for build types not specified in [builds] are ignored.
+     */
+    var buildCompilerOptions = mapOf<String, List<String>>(
+
+    )
+        set(value) {
+            value.keys.forEach {
+                if (!BuildTypes.supportedBuilds.contains(it))
+                    throw GradleException("$it is not a supported target: ${buildTypes.supportedBuilds}")
+            }
+            field = value
+        }
     var srcDirectory = srcDir
     var targetsDirectory = targetsDir
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun builds(vararg targets: String) {
         builds.clear()
         targets.forEach {
@@ -109,6 +131,9 @@ open class SqlcipherExtension: PluginExtension() {
         const val defaultVersion = "4.5.0"
         private const val srcDir = "srcSqlCipher"
         const val targetsDir = "targets"
+        const val moduleName = "sqlite3"
+        const val moduleNameH = "$moduleName.h"
+        const val amalgamation = "$moduleName.c"
 
         /**
          * Configure script requires/forces these options, so specifying them causes warnings
@@ -117,39 +142,66 @@ open class SqlcipherExtension: PluginExtension() {
 
         val sqlcipherRequiredOptions = listOf("-DSQLITE_HAS_CODEC","-DSQLCIPHER_CRYPTO_OPENSSL")
         val defaultCompilerOptions = sqlcipherRequiredOptions + listOf(
-                "-DSQLITE_OMIT_DEPRECATED",
-                "-DSQLITE_OMIT_TRACE",
-                "-DSQLITE_OMIT_TCL_VARIABLE",
-                "-DSQLITE_OMIT_PROGRESS_CALLBACK",
-                "-DSQLITE_DEFAULT_MEMSTATUS=0",
-                "-DSQLITE_DEFAULT_WAL_SYNCHRONOUS=1",
-                "-DSQLITE_OMIT_SHARED_CACHE",
-                "-DSQLITE_MAX_EXPR_DEPTH=0",
-                "-DSQLITE_DQS=0",
-                "-DSQLITE_DEFAULT_FOREIGN_KEYS=1",
-                "-DSQLITE_INTROSPECTION_PRAGMAS",
-                "-DSQLITE_USE_ALLOCA")
+            "-DNDEBUG=1",
+            "-DSQLITE_OMIT_DEPRECATED",
+            "-DSQLITE_OMIT_TRACE",
+            "-DSQLITE_OMIT_TCL_VARIABLE",
+            "-DSQLITE_OMIT_PROGRESS_CALLBACK",
+            "-DSQLITE_DEFAULT_MEMSTATUS=0",
+            "-DSQLITE_DEFAULT_WAL_SYNCHRONOUS=1",
+            "-DSQLITE_OMIT_SHARED_CACHE",
+            "-DSQLITE_ENABLE_COLUMN_METADATA",
+            "-DSQLITE_MAX_EXPR_DEPTH=0",
+            "-DSQLITE_DQS=0",
+            "-DSQLITE_DEFAULT_FOREIGN_KEYS=1",
+            "-DSQLITE_ENABLE_RTREE",
+            "-DSQLITE_ENABLE_STAT3",
+            "-DSQLITE_ENABLE_STAT4",
+            "-DSQLITE_ENABLE_FTS3_PARENTHESIS",
+            "-DSQLITE_ENABLE_FTS4",
+            "-DSQLITE_ENABLE_FTS5",
+            "-DSQLITE_INTROSPECTION_PRAGMAS"
+        )
 
-        val androidCompilerOptions = sqlcipherRequiredOptions + listOf(
-                "-DSQLITE_SOUNDEX",
-                "-DHAVE_USLEEP=1",
-                "-DSQLITE_MAX_VARIABLE_NUMBER=99999",
-                "-DSQLITE_TEMP_STORE=3",
-                "-DSQLITE_THREADSAFE=1",
-                "-DSQLITE_DEFAULT_JOURNAL_SIZE_LIMIT=1048576",
-                "-DNDEBUG=1",
-                "-DSQLITE_ENABLE_MEMORY_MANAGEMENT=1",
-                "-DSQLITE_ENABLE_LOAD_EXTENSION",
-                "-DSQLITE_ENABLE_COLUMN_METADATA",
-                "-DSQLITE_ENABLE_UNLOCK_NOTIFY",
-                "-DSQLITE_ENABLE_RTREE",
-                "-DSQLITE_ENABLE_STAT3",
-                "-DSQLITE_ENABLE_STAT4",
-                "-DSQLITE_ENABLE_JSON1",
-                "-DSQLITE_ENABLE_FTS3_PARENTHESIS",
-                "-DSQLITE_ENABLE_FTS4",
-                "-DSQLITE_ENABLE_FTS5",
-                "-DSQLITE_ENABLE_DBSTAT_VTAB")
+        val androidCompilerOptions = listOf(
+            "-DSQLITE_SOUNDEX",
+            "-DHAVE_USLEEP=1",
+            "-DSQLITE_MAX_VARIABLE_NUMBER=99999",
+            "-DSQLITE_TEMP_STORE=3",
+            "-DSQLITE_DEFAULT_JOURNAL_SIZE_LIMIT=1048576",
+            "-DSQLITE_ENABLE_MEMORY_MANAGEMENT=1",
+            "-DSQLITE_ENABLE_UNLOCK_NOTIFY",
+            "-DSQLITE_ENABLE_DBSTAT_VTAB",
+            "-DSQLITE_OMIT_AUTORESET",
+            "-DSQLITE_OMIT_BUILTIN_TEST",
+            "-DSQLITE_OMIT_LOAD_EXTENSION"
+        )
+
+        val appleCompilerOptions = listOf(
+            "-fno-common",
+            "-DSQLITE_ENABLE_API_ARMOR",
+            "-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT",
+            "-DSQLITE_OMIT_AUTORESET",
+            "-DSQLITE_OMIT_BUILTIN_TEST",
+            "-DSQLITE_OMIT_LOAD_EXTENSION",
+            "-DSQLITE_SYSTEM_MALLOC",
+            "-DSQLITE_THREADSAFE=2",
+            "-DSQLITE_OS_UNIX=1"
+        )
+
+        /**
+         * The following is to avoid a warning as a Sqlite work-around specific to MACs and people using NFS home drives.
+         */
+        val macOsCompilerOptions = appleCompilerOptions + listOf(
+            "-DSQLITE_ENABLE_LOCKING_STYLE=1"
+        )
+
+        val iosCompilerOptions = appleCompilerOptions + listOf(
+            "-DSQLITE_MAX_MMAP_SIZE=0",
+            "-DSQLITE_ENABLE_LOCKING_STYLE=0",
+            "-DSQLITE_TEMP_STORE=3",
+            "-Wno-#warnings"
+        )
 
         fun createExtensions(target: Project): SqlcipherExtension {
             val ext: SqlcipherExtension = target.extensions.create("sqlcipher", SqlcipherExtension::class.java)
@@ -174,7 +226,7 @@ open class ToolsExtension: PluginExtension() {
         private set
     lateinit var windows: WindowsToolExtension
         private set
-    lateinit var ios: IosToolExtension
+    lateinit var apple: AppleToolExtension
         private set
 
     val bashPerl = "perl"
@@ -183,7 +235,7 @@ open class ToolsExtension: PluginExtension() {
         fun createExtensions(sqlcipher: SqlcipherExtension): ToolsExtension {
             val ext: ToolsExtension = (sqlcipher as ExtensionAware).extensions.create("tools", ToolsExtension::class.java)
             ext.android = (ext as ExtensionAware).extensions.create("android", AndroidToolExtension::class.java)
-            ext.ios = (ext as ExtensionAware).extensions.create("ios", IosToolExtension::class.java)
+            ext.apple = (ext as ExtensionAware).extensions.create("apple", AppleToolExtension::class.java)
             ext.windows = (ext as ExtensionAware).extensions.create("windows", WindowsToolExtension::class.java)
             return ext
         }
@@ -314,10 +366,43 @@ open class AndroidToolExtension {
     }
 }
 
-open class IosToolExtension {
-    var platformsLocation = "/Applications/Xcode.app/Contents/Developer/Platforms"
-    var sdkVersion = "14"
+open class AppleToolExtension {
+    var platformsLocation = "/Applications/Xcode.app/Contents/Developer"
+    var sdkVersion = "15"
     var sdkVersionMinimum = "14"
+    var platforms = mapOf(
+        BuildTypes.iosX64 to "iPhoneSimulator",
+        BuildTypes.iosArm64 to "iPhoneOS",
+        BuildTypes.macX64 to "MacOSX"
+    )
+
+    private fun platform(buildType: String): String {
+        return platforms[buildType]
+            ?: throw GradleException("Bug: invalid IOS buildType: $buildType")
+    }
+
+    private fun crossPath(buildType: String): String {
+        return "$platformsLocation/Platforms/${platform(buildType)}.platform/Developer"
+    }
+
+    val toolChainPath: String get() = "$platformsLocation/Toolchains/XcodeDefault.xctoolchain/usr/bin"
+
+    /**
+     * for the specified build type, return a list of compiler options required - not configurable. All Apple
+     * builds require -isysroot pointing to the location of the SDK to use. All iphone builds require specifying the
+     * minimum version of the SDK.
+     */
+    fun options(buildType: String): List<String> {
+        val all = listOf("-isysroot ${crossPath(buildType)}/SDKs/${platform(buildType)}.sdk")
+        return if (buildType == BuildTypes.macX64)
+            all
+        else
+            all + listOf("-miphoneos-version-min=$sdkVersionMinimum")
+    }
+
+    fun optionsString(buildType: String): String {
+        return buildString { options(buildType).forEach { append("$it ") } }
+    }
 }
 
 /**

@@ -14,6 +14,6 @@ Mac Big Sur openssl
          ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
          brew install curl
 
-         May not have been necessary - see if warnings persist.
+         May not have been necessary - see if warnings persist - they do.
          To force newer curl:
          export PATH=/usr/local/Cellar/curl/7.80.0_1/bin:$PATH

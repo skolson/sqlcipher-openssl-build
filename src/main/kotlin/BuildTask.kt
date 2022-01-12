@@ -28,15 +28,6 @@ abstract class BuilderTask(@get:Input val buildType: String): DefaultTask() {
     abstract val androidMinimumSdk: Property<Int>
 
     @get:Input
-    abstract val platformsLocation: Property<String>
-
-    @get:Input
-    abstract val iosMinimumSdk: Property<String>
-
-    @get:Input
-    abstract val iosSdk: Property<String>
-
-    @get:Input
     abstract val androidNdkRoot: Property<File>
 
     @get:Input
@@ -104,16 +95,13 @@ abstract class BuilderTask(@get:Input val buildType: String): DefaultTask() {
         }
     }
 
-    fun setToolsProperties(tools: ToolsExtension) {
+    open fun setToolsProperties(tools: ToolsExtension) {
         this.windows = tools.windows
         msys2UsrBin.set(tools.windows.msys2UsrBin)
         mingwInstallDirectory.set(tools.windows.mingwInstallDirectory)
         vStudioEnvFilePath.set(tools.windows.vStudioEnvFile.absolutePath)
         androidMinimumSdk.set(tools.android.minimumSdk)
         androidNdkRoot.set(tools.android.ndkRoot)
-        iosMinimumSdk.set(tools.ios.sdkVersionMinimum)
-        platformsLocation.set(tools.ios.platformsLocation)
-        iosSdk.set(tools.ios.sdkVersion)
         r22OrLater = tools.android.r22OrLater
         runner = Runner(project, host, windows)
     }

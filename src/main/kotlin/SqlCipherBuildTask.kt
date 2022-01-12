@@ -3,6 +3,7 @@ package com.oldguy.gradle
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import java.io.File
@@ -33,7 +34,21 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
     @get:Input
     abstract val compilerOptions: ListProperty<String>
 
-    private val compilerOptionsString get() = listToString(compilerOptions.get())
+    @get:Input
+    abstract val buildCompilerOptions: MapProperty<String, List<String>>
+
+    private val allCompilerOptions get() = compilerOptions.get() +
+            (buildCompilerOptions.get()[buildType] ?: emptyList())
+
+    private val compilerOptionsString get() = listToString(allCompilerOptions)
+    private lateinit var iosConfig: AppleToolExtension
+    private val moduleName = SqlcipherExtension.moduleName
+    private val moduleNameH = SqlcipherExtension.moduleNameH
+
+    override fun setToolsProperties(tools: ToolsExtension) {
+        super.setToolsProperties(tools)
+        iosConfig = tools.apple
+    }
 
     init {
         description = "SqlCipher build task for buildType: $buildType"
@@ -41,7 +56,9 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
 
     fun setup(srcDir: File, opensslIncludeDir: File, opensslLibDir: File, targetDir: File,
               windowsSdkInstall: String, windowsSdkLibVersion: String,
-              compilerOptions: List<String>) {
+              compilerOptions: List<String>,
+              buildCompilerOptions: Map<String, List<String>>
+    ) {
         this.sourceDirectory.set(srcDir)
         inputs.dir(sourceDirectory)
         opensslIncludeDirectory.set(opensslIncludeDir)
@@ -53,6 +70,7 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
         this.windowsSdkInstall.set(windowsSdkInstall)
         this.windowsSdkLibVersion.set(windowsSdkLibVersion)
         this.compilerOptions.set(compilerOptions)
+        this.buildCompilerOptions.set(buildCompilerOptions)
     }
 
     @TaskAction
@@ -71,6 +89,9 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
             BuildTypes.linuxX64 -> linuxScript(s, t, i.absolutePath, lib.absolutePath)
             BuildTypes.x86_64,
             BuildTypes.arm64_v8a -> androidBuild(buildType, s, t, i, lib)
+            BuildTypes.macX64,
+            BuildTypes.iosArm64,
+            BuildTypes.iosX64 -> appleBuild(buildType, s, t, i)
             else ->
                 throw GradleException("Unsupported build type: $buildType")
         }
@@ -88,7 +109,7 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
             NSDKLIBPATH="${sdkLibPath}um\x64"
             LTLIBS="Advapi32.lib User32.lib kernel32.lib"
             CCOPTS="-guard:cf ${compilerOptionsString}-I${opensslIncludeDir.absolutePath}"
-            SHELL_CORE_LIB=libsqlite3.lib
+            SHELL_CORE_LIB=lib$moduleName.lib
             LDFLAGS=${opensslLibDir}\libcrypto_static.lib
             """.trimIndent()
         }
@@ -104,7 +125,7 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
             it.args("/c", batFilename)
             it.workingDir(srcDir)
         }
-        runner.copyResults(srcDir, outDir, windowsPatterns + "sqlite3.h")
+        runner.copyResults(srcDir, outDir, windowsPatterns + moduleNameH)
     }
 
     /**
@@ -119,7 +140,7 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
         val ldflags = "LDFLAGS=\"-L$opensslLib -lcrypto -lm\""
         val cmdLine = "./configure $buildOption --enable-tempstore=yes --disable-tcl --enable-static=yes --with-crypto-lib=none " +
                 "$ldflags " +
-                "CFLAGS=\"${compilerOptionsString}-I$opensslInclude\""
+                "CFLAGS=\"$compilerOptionsString -I$opensslInclude\""
 
         val shFilename = createPluginFile(srcDir,"${buildName}-$buildType.sh") {
             """
@@ -131,11 +152,11 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
 
         runner.command(srcDir, "./$shFilename") { }
         runner.copyResults(srcDir.resolve(".libs"), targetDir)
-        runner.copyResults(srcDir, targetDir, listOf("sqlite3.h", "sqlite"))
+        runner.copyResults(srcDir, targetDir, listOf(moduleNameH, moduleName))
     }
 
     private fun androidBuild(buildType: String, srcDir: File, targetDir: File, opensslIncludeDir: File, opensslLibDir: File) {
-        val builder = AndroidSqlCipher(runner, srcDir, buildType, androidMinimumSdk.get())
+        val builder = SqlCipherAndroid(runner, srcDir, buildType, androidMinimumSdk.get())
         builder.build(opensslIncludeDir,
             opensslLibDir,
             compilerOptionsString,
@@ -143,7 +164,17 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
             androidNdkPath,
             r22OrLater)
         runner.copyResults(builder.outputDir, targetDir, listOf("*.so"))
-        runner.copyResults(srcDir, targetDir, listOf("sqlite3.h"))
+        runner.copyResults(srcDir, targetDir, listOf(moduleNameH))
+    }
+
+    private fun appleBuild(buildType: String, srcDir: File, targetDir: File, opensslIncludeDir: File) {
+        val builder = SqlCipherApple(runner, srcDir, buildType, iosConfig)
+        val result = builder.build(opensslIncludeDir,
+            allCompilerOptions)
+        if (!srcDir.resolve(SqlCipherApple.libraryName).exists())
+            throw GradleException("Build failed. \n$result")
+        runner.copyResults(srcDir, targetDir, listOf("*.a"))
+        runner.copyResults(srcDir, targetDir, listOf(moduleNameH))
     }
 }
 

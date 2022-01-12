@@ -58,33 +58,37 @@ class Runner(private val target: Project, private val host:HostOs, private val e
      * @returns stderr (if any) followed by stdout, as a String.
      */
     fun command(workingDir: File, command:String, setup: ((execSpec: ExecSpec) -> Unit)): String {
-        val output = ByteArrayOutputStream()
-        val err = ByteArrayOutputStream()
-        if (host == HostOs.WINDOWS) {
-            result = target.exec {
-                it.executable(ext.msys2Exec)
-                it.workingDir(workingDir)
-                it.standardOutput = output
-                it.errorOutput = err
-                it.args("MSYSTEM=MINGW64", "CHERE_INVOKING=1", "MSYS2_PATH_TYPE=inherit", "/usr/bin/bash", "-lc")
-                it.args(command)
-                it.environment("PATH", ext.mingwBinPath)
-                it.isIgnoreExitValue = true
-                setup(it)
-                printExec(it)
+        try {
+            val output = ByteArrayOutputStream()
+            val err = ByteArrayOutputStream()
+            if (host == HostOs.WINDOWS) {
+                result = target.exec {
+                    it.executable(ext.msys2Exec)
+                    it.workingDir(workingDir)
+                    it.standardOutput = output
+                    it.errorOutput = err
+                    it.args("MSYSTEM=MINGW64", "CHERE_INVOKING=1", "MSYS2_PATH_TYPE=inherit", "/usr/bin/bash", "-lc")
+                    it.args(command)
+                    it.environment("PATH", ext.mingwBinPath)
+                    it.isIgnoreExitValue = true
+                    setup(it)
+                    printExec(it)
+                }
+            } else {
+                result = target.exec {
+                    it.executable(command)
+                    it.workingDir(workingDir)
+                    it.standardOutput = output
+                    it.errorOutput = err
+                    it.isIgnoreExitValue = true
+                    setup(it)
+                    printExec(it)
+                }
             }
-        } else {
-            result = target.exec {
-                it.executable(command)
-                it.workingDir(workingDir)
-                it.standardOutput = output
-                it.errorOutput = err
-                it.isIgnoreExitValue = true
-                setup(it)
-                printExec(it)
-            }
+            return responseParse(err, output)
+        } catch (exc: Exception) {
+            throw GradleException("Command error. Command: $command. Exception: ${exc.message}")
         }
-        return responseParse(err, output)
     }
 
     private fun printExec(execSpec: ExecSpec) {

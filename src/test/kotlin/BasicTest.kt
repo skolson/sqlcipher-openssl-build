@@ -31,7 +31,14 @@ internal class PluginBuildTest {
     sqlcipher {
         useGit = false
         version = "4.5.0"
-        compilerOptions = SqlcipherExtension.androidCompilerOptions
+        compilerOptions = SqlcipherExtension.defaultCompilerOptions
+        buildCompilerOptions = mapOf(
+            "x86_64" to SqlcipherExtension.androidCompilerOptions, 
+            "arm64-v8a" to SqlcipherExtension.androidCompilerOptions, 
+            "iosX64" to SqlcipherExtension.iosCompilerOptions, 
+            "iosArm64" to SqlcipherExtension.iosCompilerOptions, 
+            "macX64" to SqlcipherExtension.macOsCompilerOptions
+        )
 
         //builds("vStudio64", "x86_64", "arm64-v8a", "mingw64", "linuxX64")
         //builds("x86_64", "arm64-v8a")
@@ -51,7 +58,7 @@ internal class PluginBuildTest {
                 ndkVersion = "23.0.7599858"
                 minimumSdk = 23
             }
-            ios {
+            apple {
                 sdkVersion = "15"
                 sdkVersionMinimum = "14"
             }
@@ -72,7 +79,7 @@ internal class PluginBuildTest {
         buildFile.appendText(ktsText)
 
         val result = gradleRunner
-            .withArguments("opensslBuildiosX64", "--stacktrace", "--info", "--warning-mode", "all")
+            .withArguments("sqlcipherBuildmacX64", "--stacktrace", "--info", "--warning-mode", "all")
             //.withArguments("opensslBuildiosX64", "--stacktrace", "-Dorg.gradle.debug=true", "--warning-mode", "all")
                 //.withArguments("opensslBuildmingw64", "--stacktrace")
                 //.withArguments("sqlcipherBuildvStudio64", "--stacktrace", "-Dorg.gradle.debug=true")

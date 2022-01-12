@@ -5,6 +5,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import java.io.File
 import java.net.URL
 
 /**
@@ -116,8 +117,47 @@ class SqlCipherBuild(target: Project,
                         createTargetsDirectory(ext.targetsDirectory, buildName).resolve(buildType),
                         windows.sdkInstall,
                         windows.sdkLibVersion,
-                        ext.compilerOptions
+                        ext.compilerOptions,
+                        ext.buildCompilerOptions
                     )
             }
+    }
+
+    companion object {
+        /**
+         * Map build types to the matching build option used by sqlcipher configure
+         */
+        private val buildsMap = mapOf(
+            BuildTypes.arm64_v8a to "aarch64-linux",
+            BuildTypes.x86_64 to "${BuildTypes.x86_64}-linux"
+        )
+        /**
+         * This builds the amalgamation sqlite3.c and sqlite3.h from the SqlCipher source, if sqlite3.c already exists in
+         * the build directory, build is skipped
+         */
+        fun buildAmalgamation(
+            srcDir: File,
+            runner: Runner,
+            buildType: String
+        ) {
+            val amalgamation = SqlcipherExtension.amalgamation
+            if (srcDir.resolve(amalgamation).exists()) return
+            var buildOpt = buildsMap[buildType] ?: ""
+            if (buildOpt.isNotEmpty()) buildOpt = "--build=$buildOpt"
+
+            val shFilename = BuilderTask.createPluginFile(srcDir, "sqlite-amalgamation.sh") {
+                """
+            #!/bin/sh
+            ./configure $buildOpt --enable-tempstore=yes --disable-tcl --with-crypto-lib=none
+            make $amalgamation
+            """.trimIndent()
+            }
+
+            runner.logger.info("create amalgamation source: $amalgamation")
+            runner.command(srcDir, "./$shFilename") { }
+            runner.logger.info("Amalgamation source created: $amalgamation")
+        }
+
+
     }
 }
