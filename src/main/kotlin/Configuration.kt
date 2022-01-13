@@ -415,7 +415,7 @@ open class OpensslExtension {
     var tagName = defaultTagName
     var sourceURI = defaultGithubUriArchive
     var configureOptions = defaultConfigureOptions
-    var buildSpecificOptions = emptyMap<String, List<String>>()
+    var buildSpecificOptions = buildOptionsMap
 
     var srcDirectory = openSslSrcDir
     var targetsDirectory = opensslTargetsDir
@@ -450,11 +450,13 @@ open class OpensslExtension {
         val iosConfigureOptions = listOf(
             "no-dso", "no-async", "no-shared"
         )
-        val smallOptionsMap = mapOf(
-            "arm64-v8a" to nonWindowsOptions + smallConfigureOptions,
-            "x86_64" to nonWindowsOptions + smallConfigureOptions,
-            "vStudio64" to smallConfigureOptions,
-            "iosArm64" to smallConfigureOptions + iosConfigureOptions
+        val buildOptionsMap = mapOf(
+            BuildTypes.arm64_v8a to nonWindowsOptions,
+            BuildTypes.x86_64 to nonWindowsOptions,
+            BuildTypes.linuxX64 to iosConfigureOptions,
+            BuildTypes.iosArm64 to iosConfigureOptions,
+            BuildTypes.iosX64 to iosConfigureOptions,
+            BuildTypes.macX64 to iosConfigureOptions,
         )
 
     }

@@ -67,12 +67,7 @@ internal class PluginBuildTest {
             tagName = "openssl-3.0.1"
             useGit = false
             configureOptions = OpensslExtension.smallConfigureOptions
-            buildSpecificOptions = mapOf(
-                "arm64-v8a" to OpensslExtension.nonWindowsOptions,
-                "x86_64" to OpensslExtension.nonWindowsOptions,
-                "iosArm64" to OpensslExtension.iosConfigureOptions,
-                "iosX64" to OpensslExtension.iosConfigureOptions
-                )
+            buildSpecificOptions = OpensslExtension.buildOptionsMap
         }
     }
 """.trimIndent()
