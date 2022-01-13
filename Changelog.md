@@ -5,7 +5,7 @@
 ### 0.3.1 2022-01-15
 
 Support for Android NDK builds on Mac host
-Minor OpenSSL extension default handling of Configure options
+Minor changes in OpenSSL extension default handling of Configure options
 Readme changes
 
 ### 0.3.0 2022-01-11

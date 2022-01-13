@@ -42,7 +42,7 @@ internal class PluginBuildTest {
 
         //builds("vStudio64", "x86_64", "arm64-v8a", "mingw64", "linuxX64")
         //builds("x86_64", "arm64-v8a")
-        builds("macX64", "iosX64", "iosArm64") 
+        builds("macX64", "iosX64", "iosArm64", "x86_64", "arm64-v8a") 
         
         tools {
             windows {
@@ -75,8 +75,8 @@ internal class PluginBuildTest {
         buildFile.appendText(ktsText)
 
         val result = gradleRunner
-            .withArguments("sqlcipherBuildmacX64", "--stacktrace", "--info", "--warning-mode", "all")
-            //.withArguments("opensslBuildiosX64", "--stacktrace", "-Dorg.gradle.debug=true", "--warning-mode", "all")
+            .withArguments("sqlcipherBuildAll", "--stacktrace", "--warning-mode", "all")
+            //.withArguments("opensslBuildiosX64", "--stacktrace", "--info", "-Dorg.gradle.debug=true", "--warning-mode", "all")
                 //.withArguments("opensslBuildmingw64", "--stacktrace")
                 //.withArguments("sqlcipherBuildvStudio64", "--stacktrace", "-Dorg.gradle.debug=true")
                 //.withArguments("sqlcipherBuildmingw64", "--stacktrace")

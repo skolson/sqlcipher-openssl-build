@@ -112,14 +112,14 @@ class SqlCipherBuild(target: Project,
                 it.setToolsProperties(ext.toolsExt)
                 it.setup(
                     srcDir.resolve(buildType).resolve(sqlcipherDir),
-                        opensslTask.includeDirectory.get().asFile,
-                        opensslTask.targetDirectory.get().asFile,
-                        createTargetsDirectory(ext.targetsDirectory, buildName).resolve(buildType),
-                        windows.sdkInstall,
-                        windows.sdkLibVersion,
-                        ext.compilerOptions,
-                        ext.buildCompilerOptions
-                    )
+                    opensslTask.includeDirectory.get().asFile,
+                    opensslTask.targetDirectory.get().asFile,
+                    createTargetsDirectory(ext.targetsDirectory, buildName).resolve(buildType),
+                    windows.sdkInstall,
+                    windows.sdkLibVersion,
+                    ext.compilerOptions,
+                    ext.buildCompilerOptions
+                )
             }
     }
 
@@ -157,7 +157,5 @@ class SqlCipherBuild(target: Project,
             runner.command(srcDir, "./$shFilename") { }
             runner.logger.info("Amalgamation source created: $amalgamation")
         }
-
-
     }
 }

@@ -28,7 +28,7 @@ class BuildTypes {
     private val androidBuilds = listOf(arm64_v8a, x86_64)
     private val windowsBuilds = listOf(mingw64, vStudio64) + androidBuilds
     private val linuxBuilds = linuxX64 + androidBuilds
-    private val macBuilds = listOf(iosX64, iosArm64, macX64)
+    private val macBuilds = listOf(iosX64, iosArm64, macX64) + androidBuilds
 
     val host = HostOs.query()
 
@@ -445,7 +445,7 @@ open class OpensslExtension {
         /**
          * This list of options originated in SqlCipher's source build process.
          */
-        val nonWindowsOptions = listOf("-fPIC", "-fstack-protector-all")
+        val androidOptions = listOf("-fPIC", "-fstack-protector-all")
         val smallConfigureOptions = listOf(
                 "no-asm",
                 "no-idea", "no-camellia",
@@ -458,8 +458,8 @@ open class OpensslExtension {
             "no-dso", "no-async", "no-shared"
         )
         val buildOptionsMap = mapOf(
-            BuildTypes.arm64_v8a to nonWindowsOptions,
-            BuildTypes.x86_64 to nonWindowsOptions,
+            BuildTypes.arm64_v8a to androidOptions,
+            BuildTypes.x86_64 to androidOptions,
             BuildTypes.linuxX64 to iosConfigureOptions,
             BuildTypes.iosArm64 to iosConfigureOptions,
             BuildTypes.iosX64 to iosConfigureOptions,
