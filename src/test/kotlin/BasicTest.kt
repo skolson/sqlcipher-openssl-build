@@ -24,7 +24,7 @@ internal class PluginBuildTest {
     import com.oldguy.gradle.SqlcipherExtension
     
     plugins {
-        id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.3.0"
+        id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.3.1"
     }
    
 
@@ -53,9 +53,10 @@ internal class PluginBuildTest {
                 perlInstallDirectory = "D:\\SqlCipher\\Strawberry\\perl"
             }
             android {
-                sdkLocation = "D:\\Android\\sdk"
-                //sdkLocation = "/home/steve/Android/Sdk"
-                ndkVersion = "23.0.7599858"
+                windowsSdkLocation = "D:\\Android\\sdk"
+                linuxSdkLocation = "/home/steve/Android/Sdk"
+                macosSdkLocation = "/Users/steve/Library/Android/sdk"
+                ndkVersion = "24.0.7956693"
                 minimumSdk = 23
             }
             apple {

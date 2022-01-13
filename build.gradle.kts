@@ -11,7 +11,7 @@ plugins {
 
 val groupName = "com.oldguy.gradle"
 val artifactName = "sqlcipher-openssl-build"
-val versionString = "0.3.0"
+val versionString = "0.3.1"
 group = groupName
 version = versionString
 

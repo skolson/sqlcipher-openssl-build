@@ -333,7 +333,14 @@ open class WindowsToolExtension {
  * for tools usage simplified.
  */
 open class AndroidToolExtension {
-    var sdkLocation = ""
+    var windowsSdkLocation = ""
+    var linuxSdkLocation = ""
+    var macosSdkLocation = ""
+    val sdkLocation get() = when (HostOs.query()) {
+        HostOs.LINUX -> linuxSdkLocation
+        HostOs.WINDOWS -> windowsSdkLocation
+        HostOs.MAC -> macosSdkLocation
+    }
     var ndkVersion = "21.3.6528147"
     val r22OrLater: Boolean
         get() {
@@ -456,8 +463,7 @@ open class OpensslExtension {
             BuildTypes.linuxX64 to iosConfigureOptions,
             BuildTypes.iosArm64 to iosConfigureOptions,
             BuildTypes.iosX64 to iosConfigureOptions,
-            BuildTypes.macX64 to iosConfigureOptions,
+            BuildTypes.macX64 to iosConfigureOptions
         )
-
     }
 }

@@ -1,7 +1,7 @@
 Issues
 ============================================
-in Git task, clone into a "git" subdirectory of srcDir (done), then copy this structure into each of the build type directories
-to make a copy of the clone for each build type.
+MacOs host support for android builds
+Android all hosts - test builds with NDK 24.0.7956693 (r24-rc2)
 
 Apple Builds
 Mac Big Sur openssl

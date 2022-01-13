@@ -2,10 +2,21 @@
 
 ###Version history
 
+### 0.3.1 2022-01-15
+
+Support for Android NDK builds on Mac host
+Minor OpenSSL extension default handling of Configure options
+Readme changes
+
+### 0.3.0 2022-01-11
+
+Support MacOS, IOS and IOS Simulator 64 bit builds on Mac hosts
+Readme changes
+
 ### 0.2.5 2021-08-15
 *Added*
 
-- Plugin built with Kotlin 1.6.0 and Gradle 7.4.
+- Plugin built with Kotlin 1.5.31 and Gradle 7.3.x.
 
 ### 0.2.0 2021-08-15
 *Added*
