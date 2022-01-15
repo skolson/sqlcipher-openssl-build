@@ -6,14 +6,14 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import java.io.File
 
-abstract class BuilderTask(@get:Input val buildType: String): DefaultTask() {
+abstract class BuilderTask(@get:Input val buildType: BuildType): DefaultTask() {
     private val groupName = "build"
 
     @get:Input
     abstract val buildName: String
 
     @get:Input
-    val defaultFileName get() = "${buildName}-${buildType}"
+    val defaultFileName get() = "${buildName}-${buildType.name}"
 
     @get:Input
     abstract val msys2UsrBin: Property<String>
@@ -69,10 +69,10 @@ abstract class BuilderTask(@get:Input val buildType: String): DefaultTask() {
             .resolve("prebuilt")
             .resolve(ndkToolsDir)
 
-    private fun androidNdkPath(host: HostOs, buildType: String, r22OrLater: Boolean, msys: Boolean = true): String {
+    private fun androidNdkPath(host: HostOs, buildType: BuildType, r22OrLater: Boolean, msys: Boolean = true): String {
         val t = when (buildType) {
-            BuildTypes.arm64_v8a -> "aarch64-linux-android"
-            BuildTypes.x86_64 -> "x86_64-linux-android"
+            BuildType.androidArm64 -> "aarch64-linux-android"
+            BuildType.androidX64 -> "x86_64-linux-android"
             else -> return ""
         }
         val sep = if (host == HostOs.WINDOWS && !msys) ";" else ":"

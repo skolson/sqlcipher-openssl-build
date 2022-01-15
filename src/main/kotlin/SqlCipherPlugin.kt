@@ -20,7 +20,7 @@ import javax.inject.Inject
  */
 object Logger {
     private lateinit var target: Project
-    val logger get() = target.logger
+    val logger: org.gradle.api.logging.Logger get() = target.logger
 
     fun initialize(target: Project) {
         this.target = target
@@ -63,34 +63,30 @@ class SqlCipherPlugin: Plugin<Project> {
         registerAll(target, opensslTask.buildName, ext.builds, false)
         registerAll(target, sqlcipherTask.buildName, ext.builds, true)
 
-        val cleanOpensslTask = target.tasks.register("${opensslTask.buildName}Clean", CleanAllTask::class.java)
-        cleanOpensslTask.configure{
-            ext.builds.forEach {
-
+        target.tasks.register("${opensslTask.buildName}Clean", CleanAllTask::class.java)
+            .configure{
+                it.sourceDirectory.set(target.buildDir.resolve(ext.opensslExt.srcDirectory))
+                it.builds.clear()
+                it.builds.addAll(ext.builds)
+                it.sourceArchive.set(ext.opensslExt.downloadSourceFileName)
+                it.targetsDirectory.set(File(ext.opensslExt.targetsDirectory))
             }
-            it.sourceDirectory.set(target.buildDir.resolve(ext.opensslExt.srcDirectory))
-            it.builds.clear()
-            it.builds.addAll(ext.builds)
-            it.sourceArchive.set(ext.opensslExt.downloadSourceFileName)
-            it.targetsDirectory.set(File(ext.opensslExt.targetsDirectory))
-        }
-        val cleanSqlcipherTask = target.tasks.register("${sqlcipherTask.buildName}Clean", CleanAllTask::class.java)
-        cleanSqlcipherTask.configure{
-            it.sourceDirectory.set(target.buildDir.resolve(ext.srcDirectory))
-            it.builds.clear()
-            it.builds.addAll(ext.builds)
-            it.sourceArchive.set(ext.tagName)
-            it.targetsDirectory.set(File(ext.targetsDirectory))
-        }
-
+        target.tasks.register("${sqlcipherTask.buildName}Clean", CleanAllTask::class.java)
+            .configure{
+                it.sourceDirectory.set(target.buildDir.resolve(ext.srcDirectory))
+                it.builds.clear()
+                it.builds.addAll(ext.builds)
+                it.sourceArchive.set(ext.tagName)
+                it.targetsDirectory.set(File(ext.targetsDirectory))
+            }
 
         target.gradle.buildFinished {
             // any required cleanup
         }
     }
 
-    private fun registerAll(target: Project, buildName: String, builds: List<String>, updateMap: Boolean) {
-        val buildAllTask = target.tasks.register("${buildName}BuildAll", BuildAllTask::class.java, buildName)
+    private fun registerAll(target: Project, buildName: String, builds: List<BuildType>, updateMap: Boolean) {
+        val buildAllTask = target.tasks.register("${buildName}BuildAll", BuildAllTask::class.java)
         buildAllTask.configure { task ->
             task.builds.set(builds)
             task.targetDirectoriesMap
@@ -111,17 +107,17 @@ class SqlCipherPlugin: Plugin<Project> {
  * This task is useful for running all builds in the builds list. It also supplies an output property containing
  * a Map of build target directories, keyed by the values in the builds() configuration function.
  */
-open class BuildAllTask @Inject constructor(@get:Input val buildName: String): DefaultTask() {
+open class BuildAllTask @Inject constructor(): DefaultTask() {
     init {
         description = "Aggregator for all tasks listed in the builds(...) function"
         group = "build"
     }
 
     @get:Input
-    val builds: ListProperty<String> = project.objects.listProperty(String::class.java)
+    val builds: ListProperty<BuildType> = project.objects.listProperty(BuildType::class.java)
 
     @get:OutputDirectories
-    val targetDirectoriesMap: MapProperty<String, File> = project.objects.mapProperty(String::class.java, File::class.java)
+    val targetDirectoriesMap: MapProperty<BuildType, File> = project.objects.mapProperty(BuildType::class.java, File::class.java)
 
     @TaskAction
     fun dummy() {
@@ -145,7 +141,7 @@ open class CleanAllTask @Inject constructor(): DefaultTask() {
     val sourceDirectory: DirectoryProperty = project.objects.directoryProperty()
 
     @get:Input
-    val builds = emptyList<String>().toMutableList()
+    val builds = emptyList<BuildType>().toMutableList()
 
     @TaskAction
     fun dummy() {
@@ -156,7 +152,7 @@ open class CleanAllTask @Inject constructor(): DefaultTask() {
         val sourceDir = sourceDirectory.asFile.get()
         if (sourceDir.exists()) {
             builds.forEach {
-                val srcBuild = sourceDir.resolve(it)
+                val srcBuild = sourceDir.resolve(it.name)
                 if (srcBuild.exists()) srcBuild.deleteRecursively()
             }
         }

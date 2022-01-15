@@ -71,7 +71,7 @@ class SqlCipherBuild(target: Project,
             task.setup(gitUri, gitTagName, gitDir)
         }
 
-        ext.buildTypes.supportedBuilds.forEach { buildType ->
+        ext.builds.forEach { buildType ->
             val fullCopyTaskName = taskName(copyTaskName, buildType)
             target.tasks.register(fullCopyTaskName, Copy::class.java) { task ->
                 task.dependsOn(gitTask)
@@ -85,7 +85,7 @@ class SqlCipherBuild(target: Project,
         }
     }
 
-    private fun registerTasks(buildType: String, fullCopyTaskName: String) {
+    private fun registerTasks(buildType: BuildType, fullCopyTaskName: String) {
         val opensslTaskName = "${OpenSslBuild.constBuildName}$buildTaskName$buildType"
 
         val extTaskName = taskName(extractTaskName, buildType)
@@ -111,10 +111,10 @@ class SqlCipherBuild(target: Project,
                 }
                 it.setToolsProperties(ext.toolsExt)
                 it.setup(
-                    srcDir.resolve(buildType).resolve(sqlcipherDir),
+                    srcDir.resolve(buildType.name).resolve(sqlcipherDir),
                     opensslTask.includeDirectory.get().asFile,
                     opensslTask.targetDirectory.get().asFile,
-                    createTargetsDirectory(ext.targetsDirectory, buildName).resolve(buildType),
+                    createTargetsDirectory(ext.targetsDirectory, buildName).resolve(buildType.name),
                     windows.sdkInstall,
                     windows.sdkLibVersion,
                     ext.compilerOptions,
@@ -128,8 +128,8 @@ class SqlCipherBuild(target: Project,
          * Map build types to the matching build option used by sqlcipher configure
          */
         private val buildsMap = mapOf(
-            BuildTypes.arm64_v8a to "aarch64-linux",
-            BuildTypes.x86_64 to "${BuildTypes.x86_64}-linux"
+            BuildType.androidArm64 to "aarch64-linux",
+            BuildType.androidX64 to "x86_64-linux"
         )
         /**
          * This builds the amalgamation sqlite3.c and sqlite3.h from the SqlCipher source, if sqlite3.c already exists in
@@ -138,7 +138,7 @@ class SqlCipherBuild(target: Project,
         fun buildAmalgamation(
             srcDir: File,
             runner: Runner,
-            buildType: String
+            buildType: BuildType
         ) {
             val amalgamation = SqlcipherExtension.amalgamation
             if (srcDir.resolve(amalgamation).exists()) return

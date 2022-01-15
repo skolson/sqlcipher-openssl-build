@@ -23,59 +23,48 @@ enum class HostOs {
     }
 }
 
-class BuildTypes {
-    val supportedBuilds get() = BuildTypes.supportedBuilds
-    private val androidBuilds = listOf(arm64_v8a, x86_64)
-    private val windowsBuilds = listOf(mingw64, vStudio64) + androidBuilds
-    private val linuxBuilds = linuxX64 + androidBuilds
-    private val macBuilds = listOf(iosX64, iosArm64, macX64) + androidBuilds
+/**
+ * Enum of the supported build types, with attributes
+ */
+enum class BuildType {
+    mingwX64, linuxX64, iosX64, iosArm64, macosX64, androidArm64, androidX64, vStudio64;
 
     val host = HostOs.query()
-
-    fun validate(buildName: String): Boolean {
-        return when (host) {
-            HostOs.LINUX -> linuxBuilds.contains(buildName)
-            HostOs.WINDOWS -> windowsBuilds.contains(buildName)
-            HostOs.MAC -> macBuilds.contains(buildName)
-        }
+    val isAndroid = ordinal == 5 || ordinal == 6
+    val isIos = ordinal == 2 || ordinal == 3
+    val isMacOs = ordinal != 1
+    val isWindows = when (ordinal) { 0, 5, 6, 7 -> true else -> false }
+    val isLinux = when (ordinal) { 1, 5, 6 -> true else -> false }
+    val isThisHost = when (host) {
+        HostOs.LINUX -> isLinux
+        HostOs.WINDOWS -> isWindows
+        HostOs.MAC -> isMacOs
     }
 
-    fun targetDirectory(targetsDir: File, buildType: String): File {
+    /**
+     * Verifies that the subdirectory (matching the enum value name) of targetsDir for this BuildType exists, makes it
+     * if not, then returns it.
+     * If targetsDir does not exist, it is created
+     */
+    fun targetDirectory(targetsDir: File): File {
         if (!targetsDir.exists()) targetsDir.mkdirs()
-        val targetDir = targetsDir.resolve(buildType)
+        val targetDir = targetsDir.resolve(name)
         if (!targetDir.exists()) targetDir.mkdirs()
         return targetDir
     }
-
-    companion object {
-        const val mingw64 = "mingw64"
-        const val linuxX64 = "linuxX64"
-        const val iosX64 = "iosX64"
-        const val iosArm64 = "iosArm64"
-        const val macX64 = "macX64"
-        const val arm64_v8a = "arm64-v8a"
-        const val x86_64 = "x86_64"
-        const val vStudio64 = "vStudio64"
-        val supportedBuilds = listOf(mingw64, linuxX64, arm64_v8a, x86_64, vStudio64, iosX64, iosArm64, macX64)
-    }
-}
-
-abstract class PluginExtension {
-    val buildTypes = BuildTypes()
-
 }
 
 /**
  * Gradle extension for DSL configuration of the plugin. Contains an extension specific to OpenSSSL, one containing
  * tools configuration for the supported tool chains, and the configurable options that can be set by the DSL.
  */
-open class SqlcipherExtension: PluginExtension() {
+open class SqlcipherExtension {
 
     lateinit var opensslExt: OpensslExtension
         private set
     lateinit var toolsExt: ToolsExtension
         private set
-    val builds = mutableListOf<String>()
+    val builds = mutableListOf<BuildType>()
 
     var buildSqlCipher = true
     var useGit = false
@@ -89,29 +78,36 @@ open class SqlcipherExtension: PluginExtension() {
      * build type will be added after the options specified in [compilerOptions]. Entries for an unsupported build type
      * will cause an exception. Entries for build types not specified in [builds] are ignored.
      */
-    var buildCompilerOptions = mapOf<String, List<String>>(
-
-    )
-        set(value) {
-            value.keys.forEach {
-                if (!BuildTypes.supportedBuilds.contains(it))
-                    throw GradleException("$it is not a supported target: ${buildTypes.supportedBuilds}")
-            }
-            field = value
-        }
+    var buildCompilerOptions = emptyMap<BuildType, List<String>>()
     var srcDirectory = srcDir
     var targetsDirectory = targetsDir
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun builds(vararg targets: BuildType) {
+        builds.clear()
+        targets.forEach {
+            if (it.isThisHost)
+                builds.add(it)
+            else
+                Logger.logger.lifecycle("Ignoring buildType: ${it.name} on host OS ${it.host}")
+        }
+    }
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun builds(vararg targets: String) {
         builds.clear()
         targets.forEach {
-            if (!buildTypes.supportedBuilds.contains(it))
-                throw GradleException("$it is not a supported target: ${buildTypes.supportedBuilds}")
-            if (buildTypes.validate(it))
-                builds.add(it)
-            else
-                Logger.logger.lifecycle("Ignoring buildType: $it on host OS ${buildTypes.host}")
+            try {
+                BuildType.valueOf(it).also {
+                    if (it.isThisHost)
+                        builds.add(it)
+                    else
+                        Logger.logger.lifecycle("Ignoring buildType: ${it.name} on host OS ${it.host}")
+                }
+            } catch (exc: IllegalArgumentException) {
+                throw GradleException("Invalid BuildType string: $it")
+            }
+
         }
     }
 
@@ -130,7 +126,7 @@ open class SqlcipherExtension: PluginExtension() {
         const val defaultGithubUri = "https://github.com/sqlcipher/sqlcipher"
         const val defaultVersion = "4.5.0"
         private const val srcDir = "srcSqlCipher"
-        const val targetsDir = "targets"
+        const val targetsDir = "sqlCipherTargets"
         const val moduleName = "sqlite3"
         const val moduleNameH = "$moduleName.h"
         const val amalgamation = "$moduleName.c"
@@ -221,7 +217,7 @@ open class SqlcipherExtension: PluginExtension() {
  * a linux-oriented perl for the OpenSSL configure to work.    For Windows-oriented perl, Strawberry has been tested
  * and works fine, ActivePerl should also be fine for use with Visual Studio builds. For mingw builds, MSYS2 perl works.
  */
-open class ToolsExtension: PluginExtension() {
+open class ToolsExtension {
     lateinit var android: AndroidToolExtension
         private set
     lateinit var windows: WindowsToolExtension
@@ -260,8 +256,9 @@ open class WindowsToolExtension {
     val windowsPerl get() = "${windowsPerlDir}\\$perlExe"
 
     fun verifyMingw64() {
+        @Suppress("MemberVisibilityCanBePrivate")
         if (msys2InstallDirectory.isEmpty())
-            throw GradleException("msys2InstallDirectory must be specified for build type mingw64")
+            throw GradleException("msys2InstallDirectory must be specified for build type ${BuildType.mingwX64}")
         val dir = File(mingwInstallDirectory)
         if (!dir.exists())
             throw GradleException("Mingw64 install directory does not exist: $mingwInstallDirectory")
@@ -378,17 +375,19 @@ open class AppleToolExtension {
     var sdkVersion = "15"
     var sdkVersionMinimum = "14"
     var platforms = mapOf(
-        BuildTypes.iosX64 to "iPhoneSimulator",
-        BuildTypes.iosArm64 to "iPhoneOS",
-        BuildTypes.macX64 to "MacOSX"
+        BuildType.iosX64 to "iPhoneSimulator",
+        BuildType.iosArm64 to "iPhoneOS",
+        BuildType.macosX64 to "MacOSX"
     )
 
-    private fun platform(buildType: String): String {
+    private fun platform(buildType: BuildType): String {
+        if (!buildType.isMacOs)
+            throw GradleException("Bug: only invoke for MacOS build types. buildType: $buildType")
         return platforms[buildType]
             ?: throw GradleException("Bug: invalid IOS buildType: $buildType")
     }
 
-    private fun crossPath(buildType: String): String {
+    private fun crossPath(buildType: BuildType): String {
         return "$platformsLocation/Platforms/${platform(buildType)}.platform/Developer"
     }
 
@@ -399,15 +398,15 @@ open class AppleToolExtension {
      * builds require -isysroot pointing to the location of the SDK to use. All iphone builds require specifying the
      * minimum version of the SDK.
      */
-    fun options(buildType: String): List<String> {
+    fun options(buildType: BuildType): List<String> {
         val all = listOf("-isysroot ${crossPath(buildType)}/SDKs/${platform(buildType)}.sdk")
-        return if (buildType == BuildTypes.macX64)
+        return if (buildType == BuildType.macosX64)
             all
         else
             all + listOf("-miphoneos-version-min=$sdkVersionMinimum")
     }
 
-    fun optionsString(buildType: String): String {
+    fun optionsString(buildType: BuildType): String {
         return buildString { options(buildType).forEach { append("$it ") } }
     }
 }
@@ -458,12 +457,12 @@ open class OpensslExtension {
             "no-dso", "no-async", "no-shared"
         )
         val buildOptionsMap = mapOf(
-            BuildTypes.arm64_v8a to androidOptions,
-            BuildTypes.x86_64 to androidOptions,
-            BuildTypes.linuxX64 to iosConfigureOptions,
-            BuildTypes.iosArm64 to iosConfigureOptions,
-            BuildTypes.iosX64 to iosConfigureOptions,
-            BuildTypes.macX64 to iosConfigureOptions
+            BuildType.androidArm64 to androidOptions,
+            BuildType.androidX64 to androidOptions,
+            BuildType.linuxX64 to iosConfigureOptions,
+            BuildType.iosArm64 to iosConfigureOptions,
+            BuildType.iosX64 to iosConfigureOptions,
+            BuildType.macosX64 to iosConfigureOptions
         )
     }
 }

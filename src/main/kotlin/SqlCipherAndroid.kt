@@ -9,7 +9,7 @@ import java.io.File
 class SqlCipherAndroid(
         private val runner:Runner,
         private val srcDir: File,
-        private val buildType: String,
+        private val buildType: BuildType,
         androidMinimumSdk: Int)
 {
     private val host get() = HostOs.query()
@@ -95,7 +95,7 @@ class SqlCipherAndroid(
             """.trimIndent()
         }
 
-        outputDir = srcDir.resolve("libs").resolve(buildType)
+        outputDir = srcDir.resolve("libs").resolve(buildType.name)
 
         val cmd = if (host == HostOs.WINDOWS)
             androidNdkRoot.resolve("ndk-build.cmd").absolutePath

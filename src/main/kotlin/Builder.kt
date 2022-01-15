@@ -176,12 +176,12 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
             "$fileName$linuxArchiveSuffix"
     }
 
-    fun taskName(name: String, buildType: String): String {
-        return "$buildName$name$buildType"
+    fun taskName(name: String, buildType: BuildType): String {
+        return "$buildName$name${buildType.name}"
     }
 
-    fun compileDirectory(buildType: String, subDirectory: String = ""): File {
-        val srcBuildType = srcDir.resolve(buildType)
+    fun compileDirectory(buildType: BuildType, subDirectory: String = ""): File {
+        val srcBuildType = srcDir.resolve(buildType.name)
         if (!srcBuildType.exists()) srcBuildType.mkdir()
         return if (subDirectory.isEmpty())
             srcBuildType
@@ -193,7 +193,7 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
     }
 
     fun makeRunner(): Runner {
-        return Runner(target, tools.buildTypes.host, tools.windows)
+        return Runner(target, host, tools.windows)
     }
 
     companion object {

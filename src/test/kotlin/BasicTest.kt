@@ -22,7 +22,8 @@ internal class PluginBuildTest {
         val ktsText = """
     import com.oldguy.gradle.OpensslExtension
     import com.oldguy.gradle.SqlcipherExtension
-    
+    import com.oldguy.gradle.BuildType
+
     plugins {
         id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.3.1"
     }
@@ -33,16 +34,16 @@ internal class PluginBuildTest {
         version = "4.5.0"
         compilerOptions = SqlcipherExtension.defaultCompilerOptions
         buildCompilerOptions = mapOf(
-            "x86_64" to SqlcipherExtension.androidCompilerOptions, 
-            "arm64-v8a" to SqlcipherExtension.androidCompilerOptions, 
-            "iosX64" to SqlcipherExtension.iosCompilerOptions, 
-            "iosArm64" to SqlcipherExtension.iosCompilerOptions, 
-            "macX64" to SqlcipherExtension.macOsCompilerOptions
+            BuildType.androidX64 to SqlcipherExtension.androidCompilerOptions, 
+            BuildType.androidArm64 to SqlcipherExtension.androidCompilerOptions, 
+            BuildType.iosX64 to SqlcipherExtension.iosCompilerOptions, 
+            BuildType.iosArm64 to SqlcipherExtension.iosCompilerOptions, 
+            BuildType.macosX64" to SqlcipherExtension.macOsCompilerOptions
         )
 
-        //builds("vStudio64", "x86_64", "arm64-v8a", "mingw64", "linuxX64")
-        //builds("x86_64", "arm64-v8a")
-        builds("macX64", "iosX64", "iosArm64", "x86_64", "arm64-v8a") 
+        //builds("vStudio64", "androidX64", "androidArm64", "mingwX64", "linuxX64")
+        //builds("androidX64", "androidArm64")
+        builds("macX64", "iosX64", "iosArm64", "androidX64", "androidArm64") 
         
         tools {
             windows {
@@ -79,18 +80,11 @@ internal class PluginBuildTest {
             //.withArguments("opensslBuildiosX64", "--stacktrace", "--info", "-Dorg.gradle.debug=true", "--warning-mode", "all")
                 //.withArguments("opensslBuildmingw64", "--stacktrace")
                 //.withArguments("sqlcipherBuildvStudio64", "--stacktrace", "-Dorg.gradle.debug=true")
-                //.withArguments("sqlcipherBuildmingw64", "--stacktrace")
-                //.withArguments("sqlcipherBuildarm64-v8a", "--stacktrace")
-                //.withArguments("sqlcipherBuildx86_64", "--stacktrace")
+                //.withArguments("sqlcipherBuildmingwX64", "--stacktrace")
+                //.withArguments("sqlcipherBuildandroidArm64", "--stacktrace")
+                //.withArguments("sqlcipherBuildandroidX64", "--stacktrace")
                 //.withArguments("sqlcipherBuildAll", "--stacktrace", "--warning-mode", "all")
                 .build()
         println(result.output)
     }
-
-    /*
-    Example build script test for SqlCipher
-
-    SET PATH=D:\Android\sdk\ndk\23.0.7599858\toolchains\llvm\prebuilt\windows-x86_64\bin;%PATH%
-    D:\Android\sdk\ndk\23.0.7599858\ndk-build.cmd V=1 NDK_DEBUG=0 NDK_APPLICATION_MK=D:\Temp\junit2902566868193315402\build\src\sqlcipher-4.4.3\Plugin-Application.mk NDK_PROJECT_PATH=D:\Temp\junit2902566868193315402\build\src\sqlcipher-4.4.3 all
-     */
 }

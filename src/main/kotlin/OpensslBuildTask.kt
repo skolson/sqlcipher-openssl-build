@@ -7,7 +7,7 @@ import org.gradle.api.tasks.*
 import java.io.File
 import javax.inject.Inject
 
-abstract class OpensslBuildTask @Inject constructor(buildType: String)
+abstract class OpensslBuildTask @Inject constructor(buildType: BuildType)
     : BuilderTask(buildType) {
     @get:Input
     override val buildName = "openssl"
@@ -55,28 +55,26 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
         val tDir = targetDirectory.get().asFile
         logger.info("Start $name action")
         val patterns = when (buildType) {
-            BuildTypes.vStudio64 -> visualStudioBuild(buildSrcDir)
-            BuildTypes.mingw64 -> {
+            BuildType.vStudio64 -> visualStudioBuild(buildSrcDir)
+            BuildType.mingwX64 -> {
                 linuxScript(buildSrcDir, "mingw64", windows.mingwBinPath)
                 mingwPatterns
             }
-            BuildTypes.linuxX64 -> {
+            BuildType.linuxX64 -> {
                 linuxScript(buildSrcDir, "linux-x86_64")
                 linuxPatterns
             }
-            BuildTypes.arm64_v8a,
-            BuildTypes.x86_64 -> androidBuild(buildSrcDir, buildType)
-            BuildTypes.macX64 -> {
+            BuildType.androidArm64,
+            BuildType.androidX64 -> androidBuild(buildSrcDir, buildType)
+            BuildType.macosX64 -> {
                 linuxScript(buildSrcDir, "darwin64-x86_64-cc")
                 applePatterns + "*.dylib"
             }
-            BuildTypes.iosX64,
-            BuildTypes.iosArm64 -> {
+            BuildType.iosX64,
+            BuildType.iosArm64 -> {
                 iosScript(buildSrcDir, buildType)
                 applePatterns
             }
-            else ->
-                throw GradleException("Unsupported OpenSSL buildType: $buildType")
         }
         logger.info("End $name action")
         logger.info("Intermediate and final build products are in build directory: ${buildSrcDir.absolutePath}")
@@ -121,10 +119,10 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
         }
     }
 
-    private fun androidBuild(srcDir: File, buildType: String): List<String> {
+    private fun androidBuild(srcDir: File, buildType: BuildType): List<String> {
         val arch = when (buildType) {
-            BuildTypes.arm64_v8a -> androidTargets[0]
-            BuildTypes.x86_64 -> androidTargets[1]
+            BuildType.androidArm64 -> androidTargets[0]
+            BuildType.androidX64 -> androidTargets[1]
             else -> throw GradleException("Unsupported android build type: $buildType")
         }
         val configureCommand = StringBuilder()
@@ -155,7 +153,7 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
     /**
      * Use this for IOS builds
      */
-    private fun iosScript(srcDir: File, buildType: String, path: String = "") {
+    private fun iosScript(srcDir: File, buildType: BuildType, path: String = "") {
         val arch = iosTargets[buildType]
         val shFilename = createPluginFile(srcDir, "$defaultFileName.sh") {
             """
@@ -178,8 +176,8 @@ abstract class OpensslBuildTask @Inject constructor(buildType: String)
     companion object {
         val androidTargets = listOf("android-arm64", "android64-x86_64")
         val iosTargets = mapOf(
-            "iosX64" to "iossimulator-xcrun",
-            "iosArm64" to "ios64-cross"
+            BuildType.iosX64 to "iossimulator-xcrun",
+            BuildType.iosArm64 to "ios64-cross"
         )
         // use ./Configure LIST to find these
     }

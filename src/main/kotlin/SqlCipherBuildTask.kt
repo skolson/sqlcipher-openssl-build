@@ -9,7 +9,7 @@ import org.gradle.api.tasks.*
 import java.io.File
 import javax.inject.Inject
 
-abstract class SqlcipherBuildTask @Inject constructor(buildType: String): BuilderTask(buildType) {
+abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): BuilderTask(buildType) {
     @Internal
     override val buildName = "sqlcipher"
 
@@ -35,7 +35,7 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
     abstract val compilerOptions: ListProperty<String>
 
     @get:Input
-    abstract val buildCompilerOptions: MapProperty<String, List<String>>
+    abstract val buildCompilerOptions: MapProperty<BuildType, List<String>>
 
     private val allCompilerOptions get() = compilerOptions.get() +
             (buildCompilerOptions.get()[buildType] ?: emptyList())
@@ -57,7 +57,7 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
     fun setup(srcDir: File, opensslIncludeDir: File, opensslLibDir: File, targetDir: File,
               windowsSdkInstall: String, windowsSdkLibVersion: String,
               compilerOptions: List<String>,
-              buildCompilerOptions: Map<String, List<String>>
+              buildCompilerOptions: Map<BuildType, List<String>>
     ) {
         this.sourceDirectory.set(srcDir)
         inputs.dir(sourceDirectory)
@@ -81,19 +81,17 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
         val lib = opensslLibDirectory.get().asFile
         logger.info("Start $name action")
         when (buildType) {
-            BuildTypes.vStudio64 -> vstudioBuild(s, t, i, lib)
-            BuildTypes.mingw64 -> linuxScript(s, t,
+            BuildType.vStudio64 -> vstudioBuild(s, t, i, lib)
+            BuildType.mingwX64 -> linuxScript(s, t,
                     Runner.getMsysPath(i),
                     Runner.getMsysPath(lib),
                     "--build=mingw64")
-            BuildTypes.linuxX64 -> linuxScript(s, t, i.absolutePath, lib.absolutePath)
-            BuildTypes.x86_64,
-            BuildTypes.arm64_v8a -> androidBuild(buildType, s, t, i, lib)
-            BuildTypes.macX64,
-            BuildTypes.iosArm64,
-            BuildTypes.iosX64 -> appleBuild(buildType, s, t, i)
-            else ->
-                throw GradleException("Unsupported build type: $buildType")
+            BuildType.linuxX64 -> linuxScript(s, t, i.absolutePath, lib.absolutePath)
+            BuildType.androidX64,
+            BuildType.androidArm64 -> androidBuild(buildType, s, t, i, lib)
+            BuildType.macosX64,
+            BuildType.iosArm64,
+            BuildType.iosX64 -> appleBuild(buildType, s, t, i)
         }
         logger.info("End $name action.")
     }
@@ -155,7 +153,7 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
         runner.copyResults(srcDir, targetDir, listOf(moduleNameH, moduleName))
     }
 
-    private fun androidBuild(buildType: String, srcDir: File, targetDir: File, opensslIncludeDir: File, opensslLibDir: File) {
+    private fun androidBuild(buildType: BuildType, srcDir: File, targetDir: File, opensslIncludeDir: File, opensslLibDir: File) {
         val builder = SqlCipherAndroid(runner, srcDir, buildType, androidMinimumSdk.get())
         builder.build(opensslIncludeDir,
             opensslLibDir,
@@ -167,7 +165,7 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: String): Builde
         runner.copyResults(srcDir, targetDir, listOf(moduleNameH))
     }
 
-    private fun appleBuild(buildType: String, srcDir: File, targetDir: File, opensslIncludeDir: File) {
+    private fun appleBuild(buildType: BuildType, srcDir: File, targetDir: File, opensslIncludeDir: File) {
         val builder = SqlCipherApple(runner, srcDir, buildType, iosConfig)
         val result = builder.build(opensslIncludeDir,
             allCompilerOptions)

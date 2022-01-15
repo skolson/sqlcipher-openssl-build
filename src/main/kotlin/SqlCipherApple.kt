@@ -10,7 +10,7 @@ import java.io.File
 class SqlCipherApple(
     private val runner:Runner,
     private val srcDir: File,
-    private val buildType: String,
+    private val buildType: BuildType,
     private val config: AppleToolExtension
 ) {
     private val amalgamation = SqlcipherExtension.amalgamation
@@ -28,7 +28,7 @@ class SqlCipherApple(
          * compile amalgamation file using SDK for the build type, make library with libtool
          */
         val options = buildString {
-            if (buildType == BuildTypes.iosArm64) append("-arch arm64 ")
+            if (buildType == BuildType.iosArm64) append("-arch arm64 ")
             compilerOptions.forEach { append("$it ") }
             config.options(buildType).forEach { append("$it ") }
         }

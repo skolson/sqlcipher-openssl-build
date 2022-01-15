@@ -9,21 +9,21 @@ At a high level, this is current status and near-term plans for the plugin. See 
 - Windows builds
     - Visual Studio 2019 Community Edition
     - Mingw64 using MSYS2 and a variety of installed MSYS2 packages
-    - Android 64 bit (arm64_v8a, x86_64) builds using NDK 21.3.6528147 (r20b) 
-    - Android 64 bit (arm64_v8a, x86_64) builds using NDK 22.1.7171670 (r21b)
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 21.3.6528147 (r20b) 
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 22.1.7171670 (r21b)
     - Openssl 1.1.k and earlier has an issue with android NDK r22 and later. See [OpenSSL Github pull 13694](https://github.com/openssl/openssl/pull/13694). The current 3.0.0 beta has the required fix. So to use the newer NDK versions, use 3.x of openssl. The fix is also backported and merged, so should be available in 1.1.1l or later. 
-    - Android 64 bit (arm64_v8a, x86_64) builds using NDK 23.0.7599858 (r23)
-    - Android 64 bit (arm64_v8a, x86_64) builds using NDK 24.0.7956693 (r24-rc2)
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 23.0.7599858 (r23)
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2)
 - Linux builds on Ubuntu
     - linuxX64 using gcc toolchain
-    - Android 64 bit (arm64_v8a, x86_64) builds using NDK 21.3.6528147 (r20b)
-    - Android 64 bit (arm64_v8a, x86_64) builds using NDK 24.0.7956693 (r24-rc2)
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 21.3.6528147 (r20b)
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2)
 - MacOS builds
     - ios64
     - iosArm64
     - macX64 - mac on intel
     - macM1 - future
-    - Android 64 bit (arm64_v8a, x86_64) builds using NDK 24.0.7956693 (r24-rc2)
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2)
 - Published in the Gradle plugin repository under name `sqlcipher-openssl-build` 
 - Android configuration - easy add of extra source files (JNI wrappers) to standard library  
 
@@ -72,10 +72,10 @@ There is some complexity involved with correctly building OpenSSL and SqlCipher 
     - Windows 
         - Visual Studio  
         - mingw64
-        - Android NDK arm64_v8a, x86_64
+        - Android NDK androidArm64, androidX64
     - Linux
         - gcc
-        - Android NDK arm64_v8a, x86_64
+        - Android NDK androidArm64, androidX64
     - MacOS
         - iosX64 (simulator on intel)
         - iosArm64 
@@ -99,9 +99,9 @@ Windows support is included for three tool chains, each with its own requirement
         - [Windows 10 SDK Installer](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk/)   
 - Mingw64 toolchain - build process requires mingw64, make, and some other tools installed that are required during the make process for SqlCipher and for OpenSSL. 
     - [MSYS2](https://www.msys2.org/). Once installed, run these from an MSYS2 prompt:
-        - pacman -S mingw-w64-x86_64-toolchain
+        - pacman -S mingw-w64-androidX64-toolchain
         - pacman -S make
-        - pacman -S mingw-w64-x86_64-cmake
+        - pacman -S mingw-w64-androidX64-cmake
         - pacman -S diffutils
     - OpenSSL requires Assembler support
         - [NASM 2.15.05](https://www.nasm.us/)
@@ -129,8 +129,8 @@ IOS support
     - mingw64
     - linuxX64
     - Android NDK builds
-        - arm64_v8a
-        - x86_64
+        - androidArm64
+        - androidX64
     - Apple Mac builds
         - macX64 Mac on intel
         - iosX64 (IOS simulator on intel)
@@ -167,7 +167,7 @@ Use the plugins DSL in build.gradle.kts to declare enable the plugin:
 The DSL to configure the plugin for a windows hosted build producing Visual Studio, MingW, Android ARM, and Android x86 64 bit targets might look like this as an example:
 ```
     import com.oldguy.gradle.SqlcipherExtension // only needed if using any of the constants available with the extension
-    
+    import com.oldguy.gradle.BuildType
     ...
 
     sqlcipher {
@@ -175,14 +175,25 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
         version = "4.5.0"
         compilerOptions = SqlcipherExtension.defaultCompilerOptions
         buildCompilerOptions = mapOf(
-            "x86_64" to SqlcipherExtension.androidCompilerOptions, 
-            "arm64-v8a" to SqlcipherExtension.androidCompilerOptions, 
-            "iosX64" to SqlcipherExtension.iosCompilerOptions, 
-            "iosArm64" to SqlcipherExtension.iosCompilerOptions, 
-            "macX64" to SqlcipherExtension.macOsCompilerOptions
+            BuildType.androidX64 to SqlcipherExtension.androidCompilerOptions, 
+            BuildType.androidArm64 to SqlcipherExtension.androidCompilerOptions, 
+            BuildType.iosX64 to SqlcipherExtension.iosCompilerOptions, 
+            BuildType.iosArm64 to SqlcipherExtension.iosCompilerOptions, 
+            BuildType.macosX64 to SqlcipherExtension.macOsCompilerOptions
         )
 
-        builds("vStudio64", "mingw64", "arm64-v8a", "x86_64", "linuxX64", "macX64", "iosX64", "iosArm64")
+        builds("vStudio64", "mingwX64", "androidArm64", "androidX64", "linuxX64", "macosX64", "iosX64", "iosArm64")
+        // or 
+        builds(
+            BuildType.vStudio64,
+            BuildType.mingwX64,
+            BuildType.androidArm64,
+            BuildType.androidX64,
+            BuildType.linuxX64,
+            BuildType.macosX64,
+            BuildType.iosArm64,
+            BuildType.iosX64
+        )
         
         tools {
             windows {
@@ -193,7 +204,9 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
                 perlInstallDirectory = "D:\\SqlCipher\\Strawberry\\perl"
             }
             android {
-                sdkLocation = "D:\\Android\\sdk"
+                windowsSdkLocation = "D:\\Android\\sdk"
+                linuxSdkLocation = ""
+                macosSdkLocation = "/Users/username/Library/Android/sdk"
                 ndkVersion = "23.1.7779620"
                 minimumSdk = 26
             }
@@ -247,13 +260,13 @@ Available Build Types are listed here. Gradle tasks registered are based on thes
 | **Build Type** | Supporting Hosts    | Description                                                                                                                                                                                                                         |
 |----------------|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | vstudio64      | Windows             | Visual Studio Community Edition 2019 is used as the compiler/linker and produces ,lib files and .dll files (and other file types) usable with any visual studio project. Older versions of Visual Studio may work but are untested. |
-| mingw64        | Windows             | MSYS2 and MINGW64 toolchains are used to produce mingw static and shared libs on a Windows host                                                                                                                                     |
-| arm64-v8a      | Windows, Linux, Mac | Uses the Android NDK configured in **tools** DSL to build 64 bit ARM static and shared libraries                                                                                                                                    |
-| x86_64         | Windows, Linux, Mac | Uses the Android NDK configured in **tools** DSL to build 64 bit Intel/AMD static and shared libraries                                                                                                                              |
+| mingwX64       | Windows             | MSYS2 and MINGW64 toolchains are used to produce mingw static and shared libs on a Windows host                                                                                                                                     |
+| androidArm64   | Windows, Linux, Mac | Uses the Android NDK configured in **tools** DSL to build 64 bit ARM static and shared libraries                                                                                                                                    |
+| androidX64     | Windows, Linux, Mac | Uses the Android NDK configured in **tools** DSL to build 64 bit Intel/AMD static and shared libraries                                                                                                                              |
 | linuxX64       | Linux               | Standard GCC toolchain is used to produce static and shared libraries and the command line utility for sqlcipher. Initially tested on Ubuntu                                                                                        |
 | iosX64         | Mac OS Big Sur      | Xcode 13.x is used                                                                                                                                                                                                                  |
 | iosArm64       | Mac OS Big Sur      | Xcode 13.x is used                                                                                                                                                                                                                  |
-| macX64         | Mac OS Big Sur      | Xcode 13.x is used                                                                                                                                                                                                                  |
+| macosX64       | Mac OS Big Sur      | Xcode 13.x is used                                                                                                                                                                                                                  |
 
 
 Configuration DSL specifies the build types to be performed. Task names specific to a build type contain the build type in the name.  In the names below for these tasks, the build type is abbreviated to *BT*. Note that in the case of SqlCipher, no build-specific Verify tasks are needed, as it uses the same set of tools used by OpenSSL builds, which handles the verifications.   
@@ -280,7 +293,7 @@ Configuration DSL specifies the build types to be performed. Task names specific
 The DSL block `sqlcipher { ... }` contains options specific to SqlCipher builds, and contains subsection `tool { ... }` for configuring tools used by the build tasks, and subsection `openssl { ... }` for OpenSSL specific build options. So a typical configuration block in build.gradle.kts is structured like this:
 ```
 sqlcipher {
-    builds( "mingw64", "linuxX64", "ios64", "arm64-v8a", "x86_64", vStudio64" )  // or whatever subset desired
+    builds( "mingwX64", "linuxX64", "ios64", "androidArm64", "androidX64", vStudio64" )  // or whatever subset desired
     ... sqlcipher options ...
 
     openssl {
@@ -295,14 +308,14 @@ sqlcipher {
         android {
             ... optional, android-specific configuration
         }
-        ios {
-            ... optional, can specifiy IOS SDK version requirements. 
+        apple {
+            ... optional, can specifiy SDK configuration. 
         }
     }
 }
 ``` 
 
-Since both openssl and sqlcipher sections rely on tools, the tools section is described first, then openssl, finally sqlcipher.
+Since both `openssl` and `sqlcipher` sections rely on `tools` section. The `tools` section is described first, then openssl, finally sqlcipher.
 
 Each of these configuration sections is a Gradle Extension class. the Extension classes are listed below.  Some have constant values that are available for use in the DSL expressions if desired.
 
@@ -341,7 +354,7 @@ Each option in the `tools` block is below.  The type indicates whether the optio
 | platformsLocation          | String    | default is /Applications/Xcode.app/Contents/Developer                                                                                                                                                                                                                                                                                                                                                               |
 | sdkVersion                 | value     | default is "14"  (currently ignored)                                                                                                                                                                                                                                                                                                                                                                                |
 | sdkVersionMinimum          | value     | default is "14".                                                                                                                                                                                                                                                                                                                                                                                                    |
-| platforms                  | Map       | Maps build types to Apple SDK platform names. Default is: `mapOf("iosX64" to "iPhoneSimulator", "iosArm64" to "iPhoneOS", "macX64" to "MacOSX")`                                                                                                                                                                                                                                                                    |
+| platforms                  | Map       | Maps build types to Apple SDK platform names. Default is: `mapOf("iosX64" to "iPhoneSimulator", "iosArm64" to "iPhoneOS", "macosX64" to "MacOSX")`                                                                                                                                                                                                                                                                  |
 
 #### openssl DSL subsection #####
 
@@ -354,7 +367,7 @@ Each option in the `openssl` block is below. OpenSSL build process uses a PERL c
 | useGit                  | true/false | Specify true to use Git to retrieve source. Default is false, which uses HTTPS download.  Only specify this if a local git checkout of a specific tag is useful after doing build, it is noticeably slower than the download and extract option.                                                                                                                                                                                                                                                               |
 | githubUri               | value      | Required if `useGit = true`. See `defaultGithubUri` for the value used by default if not specified.                                                                                                                                                                                                                                                                                                                                                                                                            |
 | tagName                 | value      | Required by both source options. Specify the Git tag name for the release to be retrieved. See `defaultTagName` for en example value, and the one used if this is not specified. Both "OpenSSL_1_1_1g" and "OpenSSL_1_1_1h" have been tested.                                                                                                                                                                                                                                                                  | 
-| defaultTagName          | constant   | `"OpenSSL_1_1_1g"`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| defaultTagName          | constant   | `"OpenSSL_1_1_1g"`. Typically should specify an OpenSSL 3.x tag name for this.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | sourceURI               | value      | URI used by the download task to retrieve a source archive file. Both `.zip` and `.tar.gz` are supported. See `defaultGithubUriArchive` for an example, and the value used if not specified.                                                                                                                                                                                                                                                                                                                   |
 | defaultGithubUri        | constant   | `"https://github.com/openssl/openssl"`                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | defaultGithubUriArchive | constant   | `"${defaultGithubUri}/archive/"`                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -505,7 +518,7 @@ Apple requires the options below for release builds of OpenSSL running in IOS
 
     listOf("no-dso", "no-async", "no-shared")
 
-**nonWindowsOptions**
+**androidOptions**
 
 Android requires these, windows cannot use them
 
@@ -516,12 +529,12 @@ Android requires these, windows cannot use them
 This map is the default values for the build-specific options that are added. If a build type is not specified, there are no additional options for that build type.
 
     mapOf(
-        BuildTypes.arm64_v8a to nonWindowsOptions,
-        BuildTypes.x86_64 to nonWindowsOptions,
+        BuildTypes.androidArm64 to androidOptions,
+        BuildTypes.androidX64 to androidOptions,
         BuildTypes.linuxX64 to iosConfigureOptions,
         BuildTypes.iosArm64 to iosConfigureOptions,
         BuildTypes.iosX64 to iosConfigureOptions,
-        BuildTypes.macX64 to iosConfigureOptions
+        BuildTypes.macosX64 to iosConfigureOptions
     )
 
 ### Tasks - Inputs and Outputs ###
@@ -590,14 +603,18 @@ The SHELL_CORE_LIB value is a hack :-). Without it the link of the SqlCipher she
 
 After the Windows build process runs, buildDir\openssl\vStudio64 subdirectory contains these files:
 
+**to do**
+
 buildDir\sqlcipher\vStudio64 subdirectory contains these files:
+
+**to do**
 
 ### MSYS2 and MingW64
 
 Once MSYS2 is installed and configured, the build process for OpenSSL is straightforward. MSYS2 must have these packages installed before using the plugin to do a mingw64 build, or the build will fail. These installs are done from the MSYS2 command prompt.
-- pacman -S mingw-w64-x86_64-toolchain
+- pacman -S mingw-w64-androidX64-toolchain
 - pacman -S make
-- pacman -S mingw-w64-x86_64-cmake
+- pacman -S mingw-w64-androidX64-cmake
 - pacman -S diffutils
 
 The MSYS2 install directory must be properly configured in the DSL, see the **Reference** section above for details.  The plugin does not rely on the Windows PATH environment variable, so the install directory specification in the DSL is a requirement. 
@@ -655,7 +672,7 @@ libssl.so.1.1
 openssl.pc
 ``` 
 
-Same for the Android opensslBuildx86_64 task, buildDir\openssl\x86_64 subdirectory contains these files
+Same for the Android opensslBuildandroidX64 task, buildDir\openssl\androidX64 subdirectory contains these files
 ```
 libcrypto.a
 libcrypto.map

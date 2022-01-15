@@ -41,7 +41,6 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
     override lateinit var gitTask: TaskProvider<out GitCheckoutTask>
     override lateinit var downloadTask: TaskProvider<out DownloadArchiveTask>
 
-    private val buildTypes get() = sqlcipherExt.buildTypes
     private val ext = sqlcipherExt.opensslExt
 
     /**
@@ -80,7 +79,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
             task.setup(gitUri, gitTagName, gitDir)
         }
 
-        buildTypes.supportedBuilds.forEach { buildType ->
+        sqlcipherExt.builds.forEach { buildType ->
             val gitCopyTaskName = taskName(copyTaskName, buildType)
             target.tasks.register(gitCopyTaskName, Copy::class.java) { task ->
                 task.dependsOn(gitTask)
@@ -88,14 +87,14 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
                     useGit && builds.contains(buildType)
                 }
                 task.from(gitDir)
-                task.into(srcDir.resolve(buildType).resolve(archiveTopDir))
+                task.into(srcDir.resolve(buildType.name).resolve(archiveTopDir))
             }
 
             registerTasks(buildType, gitCopyTaskName)
         }
     }
 
-    private fun registerTasks(buildType: String, gitCopyTaskName: String) {
+    private fun registerTasks(buildType: BuildType, gitCopyTaskName: String) {
         val extractName = taskName(extractTaskName, buildType)
         val extractTask = target.tasks.register(extractName, OpenSslExtractTask::class.java) { task ->
             task.dependsOn(downloadTask)
@@ -113,7 +112,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
             task.doLast {
                 val runner = makeRunner()
                 when (buildType) {
-                    BuildTypes.vStudio64 -> {
+                    BuildType.vStudio64 -> {
                         windows.verifyVisualStudio()
                         windows.verifyWindowsPerl()
                         val response = runner.executable(windows.windowsPerl) {
@@ -122,7 +121,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
                         }
                         parsePerlResponse(response)
                     }
-                    BuildTypes.mingw64 -> {
+                    BuildType.mingwX64 -> {
                         windows.verifyMingw64()
                         windows.verifyMsys2Perl()
                         val response = runner.executable(windows.msys2Perl) {
@@ -131,14 +130,14 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
                         }
                         parsePerlResponse(response)
                     }
-                    BuildTypes.arm64_v8a,
-                    BuildTypes.x86_64 -> {
+                    BuildType.androidArm64,
+                    BuildType.androidX64 -> {
                         android.determineNdkVersion()
                     }
-                    BuildTypes.linuxX64 -> {
+                    BuildType.linuxX64 -> {
                     }
-                    BuildTypes.iosArm64,
-                    BuildTypes.iosX64 -> {
+                    BuildType.iosArm64,
+                    BuildType.iosX64 -> {
                     }
                 }
             }
@@ -165,7 +164,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
                 val compileDir = compileDirectory(buildType, archiveTopDir)
 
                 task.setup(compileDir,
-                        buildTypes.targetDirectory(targetsDirectory, buildType),
+                        buildType.targetDirectory(targetsDirectory),
                         options)
             }
     }
