@@ -52,6 +52,21 @@ enum class BuildType {
         if (!targetDir.exists()) targetDir.mkdirs()
         return targetDir
     }
+
+    companion object {
+        /**
+         * Convenience value for build scripts that want to limit builds by host
+         */
+        val appleBuildTypes = values().filter { it.isMacOs || it.isIos || it.isAndroid }
+        /**
+         * Convenience value for build scripts that want to limit builds by host
+         */
+        val windowsBuildTypes = values().filter { it.isWindows }
+        /**
+         * Convenience value for build scripts that want to limit builds by host
+         */
+        val linuxBuildTypes = values().filter { it.isLinux }
+    }
 }
 
 /**
@@ -82,6 +97,28 @@ open class SqlcipherExtension {
     var srcDirectory = srcDir
     var targetsDirectory = targetsDir
 
+    /**
+     * Implementations should examine the build type, and return a directory to receive a copy of the targets from the
+     * build folder after build is complete. If no implementation is provided, no copies are done and the targets will
+     * remain only in the build folder.
+     * @param buildType - specifies the buildType whose targets are available to copy
+     * @returns File which can be null for no copy desired, or a directory which target contents in build folder for
+     * this buildType should be copied.
+     */
+    var targetsCopyTo: ((buildType: BuildType) -> File?)? = null
+    var copyCinteropIncludes = false
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun builds(targets: List<BuildType>) {
+        builds.clear()
+        targets.forEach {
+            if (it.isThisHost)
+                builds.add(it)
+            else
+                Logger.logger.lifecycle("Ignoring buildType: ${it.name} on host OS ${it.host}")
+        }
+    }
+
     @Suppress("MemberVisibilityCanBePrivate")
     fun builds(vararg targets: BuildType) {
         builds.clear()
@@ -107,7 +144,6 @@ open class SqlcipherExtension {
             } catch (exc: IllegalArgumentException) {
                 throw GradleException("Invalid BuildType string: $it")
             }
-
         }
     }
 
@@ -434,7 +470,7 @@ open class OpensslExtension {
         const val defaultGithubUriArchive = "${defaultGithubUri}/archive/"
         const val defaultTagName = "openssl_3.0.1"
         const val openSslSrcDir = "srcOpenssl"
-        const val opensslTargetsDir = "targets"
+        const val opensslTargetsDir = SqlcipherExtension.targetsDir
         val defaultConfigureOptions = listOf("no-asm", "no-weak-ssl-ciphers")
 
         /**

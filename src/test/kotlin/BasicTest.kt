@@ -38,12 +38,20 @@ internal class PluginBuildTest {
             BuildType.androidArm64 to SqlcipherExtension.androidCompilerOptions, 
             BuildType.iosX64 to SqlcipherExtension.iosCompilerOptions, 
             BuildType.iosArm64 to SqlcipherExtension.iosCompilerOptions, 
-            BuildType.macosX64" to SqlcipherExtension.macOsCompilerOptions
+            BuildType.macosX64 to SqlcipherExtension.macOsCompilerOptions
         )
 
         //builds("vStudio64", "androidX64", "androidArm64", "mingwX64", "linuxX64")
         //builds("androidX64", "androidArm64")
-        builds("macX64", "iosX64", "iosArm64", "androidX64", "androidArm64") 
+        builds(BuildType.appleBuildTypes) 
+        
+        targetsCopyTo = { buildType ->
+            if (buildType.isAndroid) 
+                project.projectDir.resolve("TestFiles/androidCinterop")
+            else 
+                project.projectDir.resolve("TestFiles/cinterop")
+        }
+        copyCinteropIncludes = true
         
         tools {
             windows {
@@ -76,7 +84,7 @@ internal class PluginBuildTest {
         buildFile.appendText(ktsText)
 
         val result = gradleRunner
-            .withArguments("sqlcipherBuildAll", "--stacktrace", "--warning-mode", "all")
+            .withArguments("sqlcipherBuildmacosX64", "--stacktrace", "--warning-mode", "all")
             //.withArguments("opensslBuildiosX64", "--stacktrace", "--info", "-Dorg.gradle.debug=true", "--warning-mode", "all")
                 //.withArguments("opensslBuildmingw64", "--stacktrace")
                 //.withArguments("sqlcipherBuildvStudio64", "--stacktrace", "-Dorg.gradle.debug=true")

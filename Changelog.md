@@ -2,6 +2,11 @@
 
 ###Version history
 
+### 0.3.2 2022-01-17
+
+Refactored BuildTypes strings to BuildType enum class
+Sqlcipher build task ahd configuration now supports optional copy operation of compiled targets from the targets subdirectory of the build folder to anywhere else. A configurable function is added in SqlcipherExtension to support DSL script controlling copy destination by BuildType.
+
 ### 0.3.1 2022-01-15
 
 Support for Android NDK builds on Mac host

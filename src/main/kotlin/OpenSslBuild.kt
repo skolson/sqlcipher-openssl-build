@@ -79,7 +79,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
             task.setup(gitUri, gitTagName, gitDir)
         }
 
-        sqlcipherExt.builds.forEach { buildType ->
+        BuildType.values().forEach { buildType ->
             val gitCopyTaskName = taskName(copyTaskName, buildType)
             target.tasks.register(gitCopyTaskName, Copy::class.java) { task ->
                 task.dependsOn(gitTask)
@@ -136,6 +136,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
                     }
                     BuildType.linuxX64 -> {
                     }
+                    BuildType.macosX64,
                     BuildType.iosArm64,
                     BuildType.iosX64 -> {
                     }

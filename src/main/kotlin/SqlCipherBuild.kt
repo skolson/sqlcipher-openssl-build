@@ -54,7 +54,7 @@ class SqlCipherBuild(target: Project,
     override val srcDir get() = target.buildDir.resolve(ext.srcDirectory)
     override lateinit var gitTask: TaskProvider<out GitCheckoutTask>
     override lateinit var downloadTask: TaskProvider<out DownloadArchiveTask>
-    private val sqlcipherDir get() = "sqlcipher-${ext.version}"
+    private val sqlcipherDir get() = "$buildName-${ext.version}"
 
     init {
         downloadTask = target.tasks.register("${buildName}Download", SqlCipherDownloadTask::class.java) { task ->
@@ -71,7 +71,7 @@ class SqlCipherBuild(target: Project,
             task.setup(gitUri, gitTagName, gitDir)
         }
 
-        ext.builds.forEach { buildType ->
+        BuildType.values().forEach { buildType ->
             val fullCopyTaskName = taskName(copyTaskName, buildType)
             target.tasks.register(fullCopyTaskName, Copy::class.java) { task ->
                 task.dependsOn(gitTask)
@@ -92,7 +92,7 @@ class SqlCipherBuild(target: Project,
         target.tasks.register(extTaskName, SqlCipherExtractTask::class.java) { task ->
             task.dependsOn(downloadTask)
             task.onlyIf {
-                !useGit
+                !useGit && builds.contains(buildType)
             }
             task.setup(downloadTask.get().downloadFile.get().asFile, compileDirectory(buildType, sqlcipherDir))
         }
@@ -118,7 +118,9 @@ class SqlCipherBuild(target: Project,
                     windows.sdkInstall,
                     windows.sdkLibVersion,
                     ext.compilerOptions,
-                    ext.buildCompilerOptions
+                    ext.buildCompilerOptions,
+                    ext.targetsCopyTo,
+                    ext.copyCinteropIncludes
                 )
             }
     }

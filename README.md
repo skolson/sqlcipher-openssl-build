@@ -80,7 +80,7 @@ There is some complexity involved with correctly building OpenSSL and SqlCipher 
         - iosX64 (simulator on intel)
         - iosArm64 
         - MacOS 64 bit intel 
-        - Android NDK builds not currently supported, but easily could be
+        - Android NDK androidArm64, androidX64
 
 - OpenSSL and Sqlite both offer a rich set of compile options. The plugin offers some standard option sets for common requirements that are easily selectable and still customizable. 
 - Provide additional documentation on platform-specific build details, with initial focus on Windows host builds. 
@@ -182,19 +182,29 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
             BuildType.macosX64 to SqlcipherExtension.macOsCompilerOptions
         )
 
-        builds("vStudio64", "mingwX64", "androidArm64", "androidX64", "linuxX64", "macosX64", "iosX64", "iosArm64")
-        // or 
+        // examples for specifying desired builds
+        builds("vStudio64", "mingwX64")  // string must match a valid BuildType value name
+        // or for certain windows builds
         builds(
             BuildType.vStudio64,
-            BuildType.mingwX64,
             BuildType.androidArm64,
-            BuildType.androidX64,
-            BuildType.linuxX64,
-            BuildType.macosX64,
-            BuildType.iosArm64,
-            BuildType.iosX64
+            BuildType.androidX64
         )
-        
+        // or for all builds supported on apple
+        builds(BuildType.appleBuilds)
+        // or - for all builds on the current host
+        builds(BuildType.values().toList())
+
+        targetsCopyTo = { buildType ->
+            if (buildType.isAndroid) 
+                project.projectDir.resolve("TestFiles/androidCinterop")
+            else 
+                project.projectDir.resolve("TestFiles/cinterop")
+        }
+        // set this to true to ensure above targetsToCopy logic also copies includes required
+        // by the kotlin cinterops tool to use with the built static library
+        copyCinteropIncludes = true
+       
         tools {
             windows {
                 msys2InstallDirectory = "D:\\msys64"
@@ -400,6 +410,8 @@ Each option in the `sqlcipher` block is below. OpenSSL build process uses a PERL
 | defaultConfigureOptions | constant   | `listOf("no-asm", "no-weak-ssl-ciphers")`                                                                                                                                                                                                                                                                                                                                                                   |
 | sqlcipherSrcDir         | constant   | `"src"`                                                                                                                                                                                                                                                                                                                                                                                                     |
 | sqlcipherTargetsDir     | constant   | `"targets"`                                                                                                                                                                                                                                                                                                                                                                                                 |
+| targetsCopyTo           | function   | Default is null. Set this to specify a directory to receive a copy of targets from the build library. buildType is an argument to this function, which must return a File?. Return a null for no additional copy for the buildType, or return a valid directory for the buildType. One use for this is in combination with the option below to copy targets to a location used by Kotlin cinterop.          |
+| copyCinteropIncludes    | true/false | Default is false. Set this to true to ensure above targetsToCopy logic also copies includes required by the kotlin cinterops tool to use with the built static library; sqlcipher.h, sqliteInt.h, and vdbeInt.h.                                                                                                                                                                                            |
 
 ### SqlCipher default options ###
 

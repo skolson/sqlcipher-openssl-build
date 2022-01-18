@@ -44,6 +44,8 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): Bui
     private lateinit var iosConfig: AppleToolExtension
     private val moduleName = SqlcipherExtension.moduleName
     private val moduleNameH = SqlcipherExtension.moduleNameH
+    private var targetsCopyTo: ((buildType: BuildType) -> File?)? = null
+    private var copyCinteropIncludes:Boolean = false
 
     override fun setToolsProperties(tools: ToolsExtension) {
         super.setToolsProperties(tools)
@@ -54,10 +56,16 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): Bui
         description = "SqlCipher build task for buildType: $buildType"
     }
 
-    fun setup(srcDir: File, opensslIncludeDir: File, opensslLibDir: File, targetDir: File,
-              windowsSdkInstall: String, windowsSdkLibVersion: String,
+    fun setup(srcDir: File,
+              opensslIncludeDir: File,
+              opensslLibDir: File,
+              targetDir: File,
+              windowsSdkInstall: String,
+              windowsSdkLibVersion: String,
               compilerOptions: List<String>,
-              buildCompilerOptions: Map<BuildType, List<String>>
+              buildCompilerOptions: Map<BuildType, List<String>>,
+              targetsCopyTo: ((buildType: BuildType) -> File?)?,
+              copyCinteropIncludes: Boolean
     ) {
         this.sourceDirectory.set(srcDir)
         inputs.dir(sourceDirectory)
@@ -71,6 +79,8 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): Bui
         this.windowsSdkLibVersion.set(windowsSdkLibVersion)
         this.compilerOptions.set(compilerOptions)
         this.buildCompilerOptions.set(buildCompilerOptions)
+        this.targetsCopyTo = targetsCopyTo
+        this.copyCinteropIncludes = copyCinteropIncludes
     }
 
     @TaskAction
@@ -92,6 +102,20 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): Bui
             BuildType.macosX64,
             BuildType.iosArm64,
             BuildType.iosX64 -> appleBuild(buildType, s, t, i)
+        }
+        targetsCopyTo?.invoke(buildType)?.let { targetDir ->
+            runner.copyResults(t, targetDir)
+            if (copyCinteropIncludes) {
+                sourceDirectory.get().asFile.resolve("src").also {
+                    if (!it.exists())
+                        throw GradleException("Sqlcipher src subdirectory not found at path: ${it.absolutePath} ")
+                    runner.copyResults(it, targetDir, listOf(
+                        "sqlcipher.h",
+                        "sqliteInt.h",
+                        "vdbeInt.h"
+                    ))
+                }
+            }
         }
         logger.info("End $name action.")
     }
