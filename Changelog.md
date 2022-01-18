@@ -2,26 +2,27 @@
 
 ###Version history
 
-### 0.3.2 2022-01-17
+### 0.3.2 2022-01-18
 
-Refactored BuildTypes strings to BuildType enum class
-Sqlcipher build task ahd configuration now supports optional copy operation of compiled targets from the targets subdirectory of the build folder to anywhere else. A configurable function is added in SqlcipherExtension to support DSL script controlling copy destination by BuildType.
+- Refactored BuildTypes strings to BuildType enum class
+- Sqlcipher build task ahd configuration now supports optional copy operation of compiled targets from the targets subdirectory of the build folder to anywhere else. A configurable function is added in SqlcipherExtension to support DSL script controlling copy destination by BuildType.
+- Option added to copy includes required by cinterop
 
 ### 0.3.1 2022-01-15
 
-Support for Android NDK builds on Mac host
-Minor changes in OpenSSL extension default handling of Configure options
-Readme changes
+- Support for Android NDK builds on Mac host
+- Minor changes in OpenSSL extension default handling of Configure options
+- Readme changes
 
 ### 0.3.0 2022-01-11
 
-Support MacOS, IOS and IOS Simulator 64 bit builds on Mac hosts
-Readme changes
+- Support MacOS, IOS and IOS Simulator 64 bit builds on Mac hosts
+- Readme changes
 
 ### 0.2.5 2021-08-15
 *Added*
 
-- Plugin built with Kotlin 1.5.31 and Gradle 7.3.x.
+- Kotlin 1.5.31 and Gradle 7.3.x.
 
 ### 0.2.0 2021-08-15
 *Added*

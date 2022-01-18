@@ -25,7 +25,7 @@ At a high level, this is current status and near-term plans for the plugin. See 
     - macM1 - future
     - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2)
 - Published in the Gradle plugin repository under name `sqlcipher-openssl-build` 
-- Android configuration - easy add of extra source files (JNI wrappers) to standard library  
+- Android configuration - easy add of extra source files (JNI wrappers) to standard library
 
 #### Tested Version Combinations
 The plugin successfully performs 64 bit builds of these combinations.  Others may work. Note that the Sqlite version is listed only for information, it is determined by the SqlCipher version.
@@ -93,7 +93,7 @@ Windows support is included for three tool chains, each with its own requirement
     - OpenSSL requires Windows-oriented perl support for build configuration. Either of these works fine: 
         - [Strawberry Perl 5.32](http://strawberryperl.com/) 
         - [Active Perl 5.28](https://www.activestate.com/products/perl/downloads/)
-    - OpenSSL requires Assembler support
+    - OpenSSL optionally uses Assembler support (use no-asm option to avoid)
         - [NASM 2.15.05](https://www.nasm.us/)
     - Windows SDK 10.0.18362.1 or later
         - [Windows 10 SDK Installer](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk/)   
@@ -115,7 +115,7 @@ Windows support is included for three tool chains, each with its own requirement
 
 Mac OS support        
 - OpenSSL 3 build issues warning "Cannot find "WWW::Curl::Easy" in podpath", but still seems to work
-- all Apple builds use the standard SDK path structure and the default links for each platform, so the SDK version used is determined by the SDK install. Explicit configuration of an older installed SDK is not supported, but would be an easy pull request if desired)
+- all Apple builds use the standard SDK path structure and the default links for each platform, so the SDK version used is determined by the SDK install. Explicit configuration of an older installed SDK is not supported (but would be an easy pull request if desired).
 
 IOS support
 - Xcode 13.x standard install used
@@ -160,7 +160,7 @@ Use the plugins DSL in build.gradle.kts to declare enable the plugin:
 ```
     plugins {
             ...
-            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.3.0"
+            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.3.2"
     }
 ```
 
@@ -197,7 +197,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
         targetsCopyTo = { buildType ->
             if (buildType.isAndroid) 
-                project.projectDir.resolve("TestFiles/androidCinterop")
+                project.projectDir.resolve("TestFiles/androidJNI")
             else 
                 project.projectDir.resolve("TestFiles/cinterop")
         }
