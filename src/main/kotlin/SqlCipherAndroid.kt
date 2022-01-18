@@ -1,5 +1,6 @@
 package com.oldguy.gradle
 
+import org.gradle.api.GradleException
 import java.io.File
 
 /**
@@ -123,13 +124,17 @@ class SqlCipherAndroid(
                 $commandLine
                 """.trimIndent()
             }
-            runner.command(srcDir, "./$shFilename") { }
+            val result = runner.command(srcDir, "./$shFilename") { }
+            if (!outputDir.resolve(targetName).exists())
+                throw GradleException("Build $buildType failed. Script $shFilename did not produce $targetName in ${outputDir.absolutePath}")
+            result
         }
     }
 
     companion object {
         const val appMakeFileName = "Application.mk"
         const val makeFileName = "Android.mk"
+        const val targetName = "libsqlcipher.so"
         private val abiMap = mapOf(
             BuildType.androidX64 to "x86_64",
             BuildType.androidArm64 to "arm64-v8a"

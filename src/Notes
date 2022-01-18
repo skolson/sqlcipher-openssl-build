@@ -1,6 +1,6 @@
 Issues
 ============================================
-Sqlcipher build task should verify presence of built library at end of build.
+Sqlcipher build task should verify presence of built library at end of build. Currently only android builds check.
 
 Apple Builds
 Mac Big Sur openssl
