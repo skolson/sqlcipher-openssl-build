@@ -192,6 +192,17 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
         }
     }
 
+    /**
+     * Verifies whether a task is runnable. BuildType must be one of the configured builds, and BuildType must also be
+     * valid for the current host OS running gradle.
+     * @param builds configured list of builds, from SqlcipherExtension
+     * @param buildType current BuildType to be checked
+     * @return true if build type is in configured list and is valid for the current host OS.
+     */
+    fun taskOk(builds: List<BuildType>, buildType: BuildType): Boolean {
+        return builds.contains(buildType) && buildType.isThisHost
+    }
+
     fun makeRunner(): Runner {
         return Runner(target, host, tools.windows)
     }

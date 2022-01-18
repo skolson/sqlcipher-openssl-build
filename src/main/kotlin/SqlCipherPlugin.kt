@@ -60,9 +60,8 @@ class SqlCipherPlugin: Plugin<Project> {
         val ext = SqlcipherExtension.createExtensions(target)
         val opensslTask = OpenSslBuild(target, ext)
         val sqlcipherTask = SqlCipherBuild(target, ext)
-        val allBuilds = BuildType.values().toList()
-        registerAll(target, opensslTask.buildName, allBuilds, false)
-        registerAll(target, sqlcipherTask.buildName, allBuilds, true)
+        registerAll(target, opensslTask.buildName, ext.builds, false)
+        registerAll(target, sqlcipherTask.buildName, ext.builds, true)
 
         target.tasks.register("${opensslTask.buildName}Clean", CleanAllTask::class.java)
             .configure{

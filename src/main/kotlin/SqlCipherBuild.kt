@@ -76,7 +76,7 @@ class SqlCipherBuild(target: Project,
             target.tasks.register(fullCopyTaskName, Copy::class.java) { task ->
                 task.dependsOn(gitTask)
                 task.onlyIf {
-                    useGit && builds.contains(buildType)
+                    useGit && taskOk(builds, buildType)
                 }
                 task.from(gitDir)
                 task.into(compileDirectory(buildType, sqlcipherDir))
@@ -92,7 +92,7 @@ class SqlCipherBuild(target: Project,
         target.tasks.register(extTaskName, SqlCipherExtractTask::class.java) { task ->
             task.dependsOn(downloadTask)
             task.onlyIf {
-                !useGit && builds.contains(buildType)
+                !useGit && taskOk(builds, buildType)
             }
             task.setup(downloadTask.get().downloadFile.get().asFile, compileDirectory(buildType, sqlcipherDir))
         }
@@ -107,7 +107,7 @@ class SqlCipherBuild(target: Project,
                     extTaskName
                 it.dependsOn(target.tasks.getByName(prereqName), opensslTask)
                 it.onlyIf {
-                    builds.contains(buildType) && ext.buildSqlCipher
+                    taskOk(builds, buildType) && ext.buildSqlCipher
                 }
                 it.setToolsProperties(ext.toolsExt)
                 it.setup(

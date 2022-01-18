@@ -44,7 +44,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
     private val ext = sqlcipherExt.opensslExt
 
     /**
-     * These overrides are using get() to as extensions are not configured until tasks are to be configured by Gradle
+     * These overrides are using get() as extensions are not populated until tasks are to be configured by Gradle
      */
     private val builds get() = sqlcipherExt.builds
     private val archiveTopDir get() = "openssl-${ext.tagName}"
@@ -84,7 +84,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
             target.tasks.register(gitCopyTaskName, Copy::class.java) { task ->
                 task.dependsOn(gitTask)
                 task.onlyIf {
-                    useGit && builds.contains(buildType)
+                    useGit && taskOk(builds, buildType)
                 }
                 task.from(gitDir)
                 task.into(srcDir.resolve(buildType.name).resolve(archiveTopDir))
@@ -99,7 +99,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
         val extractTask = target.tasks.register(extractName, OpenSslExtractTask::class.java) { task ->
             task.dependsOn(downloadTask)
             task.onlyIf {
-                !useGit && sqlcipherExt.builds.contains(buildType)
+                !useGit && taskOk(builds, buildType)
             }
             task.setup(downloadTask.get().downloadFile.get().asFile, compileDirectory(buildType, archiveTopDir))
         }
@@ -107,7 +107,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
         val verify = target.tasks.register(taskName(verifyTaskName, buildType)) { task ->
             task.dependsOn(extractTask, gitTask)
             task.onlyIf {
-                builds.contains(buildType)
+                taskOk(builds, buildType)
             }
             task.doLast {
                 val runner = makeRunner()
@@ -152,7 +152,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
                     extractName
                 task.dependsOn(verify, target.tasks.getByName(prereqName))
                 task.onlyIf {
-                    builds.contains(buildType)
+                    taskOk(builds, buildType)
                 }
                 task.setToolsProperties(tools)
                 val targetsDirectory = createTargetsDirectory(ext.targetsDirectory, buildName)
