@@ -24,7 +24,7 @@ class SqlCipherAndroid(
     private val pluginMakeFileName = BuilderTask.pluginFileName(makeFileName)
     private val appVars = mapOf(
             "APP_PROJECT_PATH" to Runner.forwardSlash(srcDir.absolutePath),
-            "APP_ABI" to buildType,
+            "APP_ABI" to abiMap[buildType],
             "APP_BUILD_SCRIPT" to Runner.forwardSlash(srcDir.resolve(pluginMakeFileName).absolutePath),
             "APP_CFLAGS" to "-D_FILE_OFFSET_BITS=64",
             "APP_LDFLAGS" to "-Wl,--exclude-libs,ALL",
@@ -130,5 +130,9 @@ class SqlCipherAndroid(
     companion object {
         const val appMakeFileName = "Application.mk"
         const val makeFileName = "Android.mk"
+        private val abiMap = mapOf(
+            BuildType.androidX64 to "x86_64",
+            BuildType.androidArm64 to "arm64-v8a"
+        )
     }
 }

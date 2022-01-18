@@ -5,6 +5,7 @@
 ### 0.3.3 2022-01-20
 
 - Bugfix: some host-specific tasks could attempt to run on wrong host OS.
+- Bugfix: BuildType refactor regressed android builds by specifying wrong ABI literal
 
 ### 0.3.2 2022-01-18
 

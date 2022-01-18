@@ -238,13 +238,15 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
 Using this configuration, running Gradle task `sqlcipherBuildAll` will run all the tasks required to perform the designated builds. Only build tasks supported on the host running gradle will be run, others will be skipped.
 
-In the above DSL, SqlCipher 4.5.0 would be built using a source archive (useGit = false) from Github (.zip if running Gradle on windows, .tar.gz if not). The **builds(...)** function indicates Visual Studio 64 bit, MingW64, and two android builds would be performed. These would happen only if gradle is being run on a Windows host. If gradle is being run on a linux host, then only the two android and one linuxX64 builds run. All targets produced would reside in the project buildDir/targets directory, each buildType having its own subdirectory. the project buildDir directory will also contain "srcOpenssl" and one "srcSqlcipher" subdirectory each for OpenSSL and SqlCipher. Each of there will contain one subdirectory for each configured build type, containing source and all respective build artifacts.  
+In the above DSL, SqlCipher 4.5.0 would be built using a source archive (useGit = false) from Github (.zip if running Gradle on windows, .tar.gz if not). Only tasks for build types specified in **builds(...)** function that are valid for the current Host OS will be performed. sqlCipherTargets directory, each buildType having its own subdirectory. The project buildDir directory will also contain "srcOpenssl" and "srcSqlcipher" subdirectories. These will contain one subdirectory for each configured build type, containing source and all respective build artifacts.  
 
-The sqlcipher compilerOptions are set to a default list above. These options are used by all builds regardless of build type.  Any kotlin expression that evaluates to a List<String> is valid. The intent is each option is one entry in the list. These can be SQLITE option definitions or other compiler command line options. See the default definitions below for an example of how this can be specified. 
+The sqlcipher `compilerOptions` are set to a default list above. These options are used by all builds regardless of build type.  Any kotlin expression that evaluates to a List<String> is valid. The intent is each option is one entry in the list. These can be SQLITE option definitions or other compiler command line options. See the default definitions below for an example of how this can be specified. 
 
-The sqlcipher buildCompilerOptions value is a map keyed by build type, of compiler options only for a specific build type.  If options for a build type are found, they are appended after the compilerOptions.
+The sqlcipher `buildCompilerOptions` value is a map keyed by build type, of compiler options only for a specific build type.  If options for a build type are found, they are appended after the compilerOptions.
 
-compilerOptions assignment above uses pre-defined defaults used for all platforms. buildCompilerOptions is also with a map of defaults. See the Reference section below for details on the defaults.  
+`compilerOptions` assignment above uses pre-defined defaults used for all platforms. buildCompilerOptions is also with a map of defaults. See the Reference section below for details on the defaults.  
+
+The gradle command line logging option `--info` can be specified to cause verbose logging to occur, which includes all build output from the shell scripts run by the plugin.
 
 **Note** - The build process is kinda long for OpenSSL and has to happen for each target. On a decent but not high end build machine OpenSSL for mingw64 takes about 5 minutes to build. Linux OpenSSL builds are significantly faster. SqlCipher builds much quicker, but patience is required when running lots of target builds in one Gradle run. 
 

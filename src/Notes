@@ -1,7 +1,6 @@
 Issues
 ============================================
-MacOs host support for android builds
-Android all hosts - test builds with NDK 24.0.7956693 (r24-rc2)
+Sqlcipher build task should verify presence of built library at end of build.
 
 Apple Builds
 Mac Big Sur openssl
