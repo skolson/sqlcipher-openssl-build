@@ -5,6 +5,9 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
 import java.io.File
 
+/**
+ * Enum of the supported operating systems running Gradle
+ */
 enum class HostOs {
     LINUX, WINDOWS, MAC;
 
@@ -24,16 +27,56 @@ enum class HostOs {
 }
 
 /**
- * Enum of the supported build types, with attributes
+ * Enum of the supported build types, with attributes useful for determining which hosts support which build types,
+ * which platform a build type supports.
  */
 enum class BuildType {
-    mingwX64, linuxX64, iosX64, iosArm64, macosX64, androidArm64, androidX64, vStudio64;
+    /**
+     * Windows only, using the mingw 64-bit toolchain
+     */
+    mingwX64,
+
+    /**
+     * Tested on Ubuntu Linux, should work on many others.
+     */
+    linuxX64,
+
+    /**
+     * IOS Simulator, MacOS hosts only
+     */
+    iosX64,
+
+    /**
+     * IOS for ARM 64-bit, MacOS hosts only
+     */
+    iosArm64,
+
+    /**
+     * Mac OS Big Sur or later, 64 bit Intel/AMD architecture
+     */
+    macosX64,
+
+    /**
+     * Android ARM 64-bit using the Android NDK, supported on all hosts
+     */
+    androidArm64,
+
+    /**
+     * Android Intel/AMD 64-bit using the Android NDK, supported on all hosts. Typically for Android Emulators
+     */
+    androidX64,
+
+    /**
+     * Windows 10 or later Visual Studio Community Edition 2019 toolchain for Intel/AMD 64 bit windows hosts only.
+     */
+    vStudio64;
 
     val host = HostOs.query()
     val isAndroid = ordinal == 5 || ordinal == 6
     val isIos = ordinal == 2 || ordinal == 3
-    val isMacOs = ordinal != 1
-    val isWindows = when (ordinal) { 0, 5, 6, 7 -> true else -> false }
+    val isMacOs = isIos || isAndroid || ordinal == 4
+    val isWindowsOnly = when (ordinal) { 0, 7 -> true else -> false }
+    val isWindows = isWindowsOnly || isAndroid
     val isLinux = when (ordinal) { 1, 5, 6 -> true else -> false }
     val isThisHost = when (host) {
         HostOs.LINUX -> isLinux
@@ -101,8 +144,8 @@ open class SqlcipherExtension {
      * Implementations should examine the build type, and return a directory to receive a copy of the targets from the
      * build folder after build is complete. If no implementation is provided, no copies are done and the targets will
      * remain only in the build folder.
-     * @param buildType - specifies the buildType whose targets are available to copy
-     * @returns File which can be null for no copy desired, or a directory which target contents in build folder for
+     * argument buildType - specifies the buildType whose targets are available to copy
+     * @returns File which can be null for no copy desired, or a directory into which target contents in build folder for
      * this buildType should be copied.
      */
     var targetsCopyTo: ((buildType: BuildType) -> File?)? = null
@@ -232,6 +275,7 @@ open class SqlcipherExtension {
             "-DSQLITE_MAX_MMAP_SIZE=0",
             "-DSQLITE_ENABLE_LOCKING_STYLE=0",
             "-DSQLITE_TEMP_STORE=3",
+            "-fembed-bitcode",
             "-Wno-#warnings"
         )
 

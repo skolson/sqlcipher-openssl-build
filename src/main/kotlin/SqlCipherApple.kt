@@ -31,8 +31,10 @@ class SqlCipherApple(
             if (buildType == BuildType.iosArm64) append("-arch arm64 ")
             compilerOptions.forEach { append("$it ") }
             config.options(buildType).forEach { append("$it ") }
+            append("-I. -I${opensslIncludeDir.absolutePath} -fPIC -O3")
         }
         val objectName = "${SqlcipherExtension.moduleName}.o"
+        runner.logger.lifecycle("$scriptName, compilerOptions: $options")
         BuilderTask.createPluginFile(
             srcDir,
             scriptName,
@@ -40,7 +42,7 @@ class SqlCipherApple(
             """
             #!/bin/zsh
             export PATH="${config.toolChainPath}:${'$'}PATH"    
-            clang $options -I. -I${opensslIncludeDir.absolutePath} -fPIC -O3 -o $objectName -c $amalgamation
+            clang $options -o $objectName -c $amalgamation
             libtool -static -o $libraryName $objectName
             """.trimIndent()
         }

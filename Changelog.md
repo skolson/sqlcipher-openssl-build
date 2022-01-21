@@ -6,6 +6,7 @@
 
 - Bugfix: some host-specific tasks could attempt to run on wrong host OS.
 - Bugfix: BuildType refactor regressed android builds by specifying wrong ABI literal
+- Ios Sqlcipher compile now has bitcode enabled
 
 ### 0.3.2 2022-01-18
 

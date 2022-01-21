@@ -23,9 +23,11 @@ class SqlCipherAndroid(
      */
     private val pluginAppMakeFileName = BuilderTask.pluginFileName(appMakeFileName)
     private val pluginMakeFileName = BuilderTask.pluginFileName(makeFileName)
+    private val abiName = abiMap[buildType]
+        ?: throw GradleException("Bug: Unsupported android build type: ${buildType.name}")
     private val appVars = mapOf(
             "APP_PROJECT_PATH" to Runner.forwardSlash(srcDir.absolutePath),
-            "APP_ABI" to abiMap[buildType],
+            "APP_ABI" to abiName,
             "APP_BUILD_SCRIPT" to Runner.forwardSlash(srcDir.resolve(pluginMakeFileName).absolutePath),
             "APP_CFLAGS" to "-D_FILE_OFFSET_BITS=64",
             "APP_LDFLAGS" to "-Wl,--exclude-libs,ALL",
@@ -95,8 +97,8 @@ class SqlCipherAndroid(
             include ${'$'}(PREBUILT_STATIC_LIBRARY)
             """.trimIndent()
         }
-
-        outputDir = srcDir.resolve("libs").resolve(buildType.name)
+        runner.logger.lifecycle("Android make: $pluginMakeFileName CFLAGS: $cFlags")
+        outputDir = srcDir.resolve("libs").resolve(abiName)
 
         val cmd = if (host == HostOs.WINDOWS)
             androidNdkRoot.resolve("ndk-build.cmd").absolutePath

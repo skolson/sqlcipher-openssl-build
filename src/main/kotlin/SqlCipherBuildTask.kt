@@ -106,14 +106,19 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): Bui
         targetsCopyTo?.invoke(buildType)?.let { targetDir ->
             runner.copyResults(t, targetDir)
             if (copyCinteropIncludes) {
+                runner.copyResults(lib, targetDir, listOf("libcrypto.*"))
                 sourceDirectory.get().asFile.resolve("src").also {
                     if (!it.exists())
                         throw GradleException("Sqlcipher src subdirectory not found at path: ${it.absolutePath} ")
-                    runner.copyResults(it, targetDir, listOf(
-                        "sqlcipher.h",
-                        "sqliteInt.h",
-                        "vdbeInt.h"
-                    ))
+                    if (buildType.isWindowsOnly) {
+                        runner.copyResults(
+                            it, targetDir, listOf(
+                                "sqlcipher.h",
+                                "sqliteInt.h",
+                                "vdbeInt.h"
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -122,6 +127,7 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): Bui
 
     private fun vstudioBuild(srcDir: File, outDir: File, opensslIncludeDir: File, opensslLibDir: File) {
         val sdkLibPath = "${windowsSdkInstall.get()}\\Lib\\${windowsSdkLibVersion.get()}\\"
+        val winCompilerOptions = "-guard:cf ${compilerOptionsString}-I${opensslIncludeDir.absolutePath}"
         val nmakeCmdFileName = createPluginFile(srcDir, "nmakeCmdFile.txt") {
             """
             FOR_WIN10=1
@@ -130,19 +136,19 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): Bui
             NCRTLIBPATH="${sdkLibPath}ucrt\x64"
             NSDKLIBPATH="${sdkLibPath}um\x64"
             LTLIBS="Advapi32.lib User32.lib kernel32.lib"
-            CCOPTS="-guard:cf ${compilerOptionsString}-I${opensslIncludeDir.absolutePath}"
+            CCOPTS="$winCompilerOptions"
             SHELL_CORE_LIB=lib$moduleName.lib
             LDFLAGS=${opensslLibDir}\libcrypto_static.lib
             """.trimIndent()
         }
 
-        val batFilename = createPluginFile(srcDir, "${defaultFileName}.bat") {
+        val batFilename = createPluginFile(srcDir, "$defaultFileName.bat") {
             """
             call "${vStudioEnvFilePath.get()}"
             nmake /f Makefile.msc @$nmakeCmdFileName
             """.trimIndent()
         }
-
+        runner.logger.lifecycle("$defaultFileName.bat compilerOptions: $winCompilerOptions")
         runner.executable("cmd.exe") {
             it.args("/c", batFilename)
             it.workingDir(srcDir)
@@ -171,7 +177,7 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): Bui
             make
             """.trimIndent()
         }
-
+        runner.logger.lifecycle("$shFilename compilerOptions: $compilerOptionsString")
         runner.command(srcDir, "./$shFilename") { }
         runner.copyResults(srcDir.resolve(".libs"), targetDir)
         runner.copyResults(srcDir, targetDir, listOf(moduleNameH, moduleName))

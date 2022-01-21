@@ -84,7 +84,7 @@ internal class PluginBuildTest {
         buildFile.appendText(ktsText)
 
         val result = gradleRunner
-            .withArguments("sqlcipherBuildAll", "--stacktrace", "-Dorg.gradle.debug=true", "--warning-mode", "all")
+            .withArguments("sqlcipherBuildAll", "--stacktrace", "--warning-mode", "all")
             //.withArguments("opensslBuildiosX64", "--stacktrace", "--info", "-Dorg.gradle.debug=true", "--warning-mode", "all")
                 //.withArguments("opensslBuildmingw64", "--stacktrace")
                 //.withArguments("sqlcipherBuildvStudio64", "--stacktrace", "-Dorg.gradle.debug=true")
