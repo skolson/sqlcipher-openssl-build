@@ -79,10 +79,6 @@ class SqlCipherPlugin: Plugin<Project> {
                 it.sourceArchive.set(ext.tagName)
                 it.targetsDirectory.set(File(ext.targetsDirectory))
             }
-
-        target.gradle.buildFinished {
-            // any required cleanup
-        }
     }
 
     private fun registerAll(target: Project, buildName: String, builds: List<BuildType>, updateMap: Boolean) {

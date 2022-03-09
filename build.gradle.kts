@@ -11,7 +11,7 @@ plugins {
 
 val groupName = "com.oldguy.gradle"
 val artifactName = "sqlcipher-openssl-build"
-val versionString = "0.3.3"
+val versionString = "0.3.4"
 group = groupName
 version = versionString
 
@@ -21,6 +21,11 @@ repositories {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
 }
 
 dependencies {

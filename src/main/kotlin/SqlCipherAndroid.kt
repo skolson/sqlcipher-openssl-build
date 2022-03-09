@@ -89,6 +89,7 @@ class SqlCipherAndroid(
             LOCAL_SRC_FILES := ${makeVars["LOCAL_SRC_FILES"]}
             $ldFlags
             LOCAL_STATIC_LIBRARIES += $opensslModule
+            LOCAL_LDLIBS := ${makeVars["LOCAL_LDLIBS"]}
             include ${'$'}(BUILD_SHARED_LIBRARY)
             include ${'$'}(CLEAR_VARS)
             LOCAL_MODULE := $opensslModule

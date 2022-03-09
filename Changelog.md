@@ -2,6 +2,11 @@
 
 ###Version history
 
+### 0.3.4 2022-03
+
+- Sqlcipher 4.5.1 and Android NDK 25.0.8151533 fails build due to missing `LOCAL_LDLIBS := -llog` line in make file
+- Gradle 7.4.1
+
 ### 0.3.3 2022-01-20
 
 - Bugfix: some host-specific tasks could attempt to run on wrong host OS.
