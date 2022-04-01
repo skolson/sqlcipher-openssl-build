@@ -23,7 +23,7 @@ At a high level, this is current status and near-term plans for the plugin. See 
     - iosArm64
     - macX64 - mac on intel
     - macM1 - future
-    - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2)
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2) or later
 - Published in the Gradle plugin repository under name `sqlcipher-openssl-build` 
 - Android configuration - easy add of extra source files (JNI wrappers) to standard library
 
@@ -39,6 +39,7 @@ The plugin successfully performs 64 bit builds of these combinations.  Others ma
 | 3.0.0 beta2     | 4.4.3             | 3.34.1         |
 | 3.0.0           | 4.5.0             | 3.36.0         |
 | 3.0.1           | 4.5.0             | 3.36.0         |
+| 3.0.1           | 4.5.1             | 3.37.2         |
 
 ## OpenSSL
 *From the OpenSSL site:*
@@ -160,7 +161,7 @@ Use the plugins DSL in build.gradle.kts to declare enable the plugin:
 ```
     plugins {
             ...
-            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.3.2"
+            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.3.4"
     }
 ```
 
@@ -172,7 +173,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
     sqlcipher {
         useGit = false
-        version = "4.5.0"
+        version = "4.5.1"
         compilerOptions = SqlcipherExtension.defaultCompilerOptions
         buildCompilerOptions = mapOf(
             BuildType.androidX64 to SqlcipherExtension.androidCompilerOptions, 
@@ -217,7 +218,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
                 windowsSdkLocation = "D:\\Android\\sdk"
                 linuxSdkLocation = ""
                 macosSdkLocation = "/Users/username/Library/Android/sdk"
-                ndkVersion = "23.1.7779620"
+                ndkVersion = "25.0.8221429"
                 minimumSdk = 26
             }
             apple {
