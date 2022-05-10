@@ -40,6 +40,7 @@ The plugin successfully performs 64 bit builds of these combinations.  Others ma
 | 3.0.0           | 4.5.0             | 3.36.0         |
 | 3.0.1           | 4.5.0             | 3.36.0         |
 | 3.0.1           | 4.5.1             | 3.37.2         |
+| 3.0.3           | 4.5.1             | 3.37.2         |
 
 ## OpenSSL
 *From the OpenSSL site:*
