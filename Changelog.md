@@ -8,6 +8,7 @@
 - Kotlin 1.8.21
 - jgit 6.6.0.202305301015-r
 - Java 17
+- gradle plugin-publish plugin version 1.2.0 (note: this was not included in 0.3.5 Git tag in error)
 
 ### 0.3.4 2022-03
 
