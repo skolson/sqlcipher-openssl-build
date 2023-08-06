@@ -151,7 +151,7 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
     abstract val useGit: Boolean
     abstract val gitUri: String
     abstract val gitTagName: String
-    abstract val downloadUrl: URL
+    abstract val downloadUrl: String
     abstract var gitTask: TaskProvider<out GitCheckoutTask>
     abstract var downloadTask: TaskProvider<out DownloadArchiveTask>
     abstract val srcDir: File
@@ -162,7 +162,7 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
     val verifyTaskName = "Verify"
 
     fun createTargetsDirectory(targetsName: String, buildName: String): File {
-        val targetsDir = target.buildDir.resolve(targetsName)
+        val targetsDir = target.layout.buildDirectory.get().asFile.resolve(targetsName)
         if (!targetsDir.exists()) targetsDir.mkdirs()
         val buildNameDir = targetsDir.resolve(buildName)
         if (!buildNameDir.exists()) buildNameDir.mkdirs()

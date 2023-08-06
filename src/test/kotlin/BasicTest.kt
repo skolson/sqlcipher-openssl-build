@@ -25,13 +25,13 @@ internal class PluginBuildTest {
     import com.oldguy.gradle.BuildType
 
     plugins {
-        id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.3.1"
+        id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.3.5"
     }
    
 
     sqlcipher {
         useGit = false
-        version = "4.5.0"
+        version = "4.5.4"
         compilerOptions = SqlcipherExtension.defaultCompilerOptions
         buildCompilerOptions = mapOf(
             BuildType.androidX64 to SqlcipherExtension.androidCompilerOptions, 
@@ -45,11 +45,17 @@ internal class PluginBuildTest {
         //builds("androidX64", "androidArm64")
         builds(BuildType.appleBuildTypes) 
         
+        val androidMainDirectory = projectDir.resolve("src").resolve("androidMain")
+        val nativeInterop = projectDir.resolve("src/nativeInterop")
+        val abiMap = mapOf(
+            BuildType.androidX64 to "x86_64",
+            BuildType.androidArm64 to "arm64-v8a"
+        )
         targetsCopyTo = { buildType ->
-            if (buildType.isAndroid) 
-                project.projectDir.resolve("TestFiles/androidCinterop")
-            else 
-                project.projectDir.resolve("TestFiles/cinterop")
+            if (buildType.isAndroid)
+                androidMainDirectory.resolve("sqlcipher").resolve(abiMap[buildType]!!)
+            else
+                nativeInterop.resolve(buildType.name)
         }
         copyCinteropIncludes = true
         
@@ -65,8 +71,8 @@ internal class PluginBuildTest {
                 windowsSdkLocation = "D:\\Android\\sdk"
                 linuxSdkLocation = "/home/steve/Android/Sdk"
                 macosSdkLocation = "/Users/steve/Library/Android/sdk"
-                ndkVersion = "24.0.7956693"
-                minimumSdk = 23
+                ndkVersion = "25.2.9519653"
+                minimumSdk = 26
             }
             apple {
                 sdkVersion = "15"
@@ -74,7 +80,7 @@ internal class PluginBuildTest {
             }
         }
         openssl {
-            tagName = "openssl-3.0.1"
+            tagName = "openssl-3.1.2"
             useGit = false
             configureOptions = OpensslExtension.smallConfigureOptions
             buildSpecificOptions = OpensslExtension.buildOptionsMap

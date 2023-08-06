@@ -65,7 +65,7 @@ class SqlCipherPlugin: Plugin<Project> {
 
         target.tasks.register("${opensslTask.buildName}Clean", CleanAllTask::class.java)
             .configure{
-                it.sourceDirectory.set(target.buildDir.resolve(ext.opensslExt.srcDirectory))
+                it.sourceDirectory.set(target.layout.buildDirectory.get().asFile.resolve(ext.opensslExt.srcDirectory))
                 it.builds.clear()
                 it.builds.addAll(ext.builds)
                 it.sourceArchive.set(ext.opensslExt.downloadSourceFileName)
@@ -73,7 +73,7 @@ class SqlCipherPlugin: Plugin<Project> {
             }
         target.tasks.register("${sqlcipherTask.buildName}Clean", CleanAllTask::class.java)
             .configure{
-                it.sourceDirectory.set(target.buildDir.resolve(ext.srcDirectory))
+                it.sourceDirectory.set(target.layout.buildDirectory.get().asFile.resolve(ext.srcDirectory))
                 it.builds.clear()
                 it.builds.addAll(ext.builds)
                 it.sourceArchive.set(ext.tagName)

@@ -53,10 +53,10 @@ abstract class DownloadArchiveTask @Inject constructor(): DefaultTask() {
         group = "build"
     }
 
-    abstract val url: Property<URL>
+    abstract val url: Property<String>
     abstract val downloadFile: RegularFileProperty
 
-    fun setup(downloadUrl: URL, outputFile: File) {
+    fun setup(downloadUrl: String, outputFile: File) {
         url.set(downloadUrl)
         downloadFile.set(outputFile)
         outputs.file(outputFile)
@@ -64,7 +64,7 @@ abstract class DownloadArchiveTask @Inject constructor(): DefaultTask() {
 
     @TaskAction
     fun download() {
-        val readChannel = Channels.newChannel(url.get().openStream())
+        val readChannel = Channels.newChannel(URL(url.get()).openStream())
         val fileOS = FileOutputStream(downloadFile.get().asFile)
         val writeChannel = fileOS.channel
         writeChannel.transferFrom(readChannel, 0, Long.MAX_VALUE)

@@ -2,6 +2,13 @@
 
 ###Version history
 
+### 0.3.5 2023-08
+
+- For Gradle 9 compatibility, change all input properties of type "url" to String. String Property value must be valid for java.net.URL constructor
+- Kotlin 1.8.21
+- jgit 6.6.0.202305301015-r
+- Java 17
+
 ### 0.3.4 2022-03
 
 - Sqlcipher 4.5.1 and Android NDK 25.0.8151533 fails build due to missing `LOCAL_LDLIBS := -llog` line in make file

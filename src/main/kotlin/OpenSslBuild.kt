@@ -29,7 +29,7 @@ abstract class OpenSslGitTask: GitCheckoutTask() {
 
 abstract class OpenSslDownloadTask: DownloadArchiveTask() {
     @get:Input
-    abstract override val url: Property<URL>
+    abstract override val url: Property<String>
     @get:OutputFile
     abstract override val downloadFile: RegularFileProperty
 }
@@ -49,11 +49,11 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
     private val builds get() = sqlcipherExt.builds
     private val archiveTopDir get() = "openssl-${ext.tagName}"
     // parent directory of each of the build type subdirectories
-    override val srcDir get() = target.buildDir.resolve(ext.srcDirectory)
+    override val srcDir get() = target.layout.buildDirectory.get().asFile.resolve(ext.srcDirectory)
     override val useGit: Boolean get() = ext.useGit
     override val gitUri:String get() = ext.githubUri
     override val gitTagName:String get() = ext.tagName
-    override val downloadUrl: URL get() = URL(ext.downloadSource)
+    override val downloadUrl: String get() = ext.downloadSource
 
     init {
         val opensslVerify = target.tasks.register("${buildName}Verify") { task ->

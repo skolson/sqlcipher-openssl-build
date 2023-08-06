@@ -28,7 +28,7 @@ At a high level, this is current status and near-term plans for the plugin. See 
 - Android configuration - easy add of extra source files (JNI wrappers) to standard library
 
 #### Tested Version Combinations
-The plugin successfully performs 64 bit builds of these combinations.  Others may work. Note that the Sqlite version is listed only for information, it is determined by the SqlCipher version.
+The plugin successfully performs 64 bit builds of these combinations.  Other unlisted combinations also work. Note that the Sqlite version is listed only for information, it is determined by the SqlCipher version.
 
 | OpenSSL version | SqlCipher version | Sqlite Version |
 |-----------------|-------------------|----------------|
@@ -41,6 +41,7 @@ The plugin successfully performs 64 bit builds of these combinations.  Others ma
 | 3.0.1           | 4.5.0             | 3.36.0         |
 | 3.0.1           | 4.5.1             | 3.37.2         |
 | 3.0.3           | 4.5.1             | 3.37.2         |
+| 3.1.2           | 4.5.4             | 3.41.2         |
 
 ## OpenSSL
 *From the OpenSSL site:*
@@ -174,7 +175,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
     sqlcipher {
         useGit = false
-        version = "4.5.1"
+        version = "4.5.4"
         compilerOptions = SqlcipherExtension.defaultCompilerOptions
         buildCompilerOptions = mapOf(
             BuildType.androidX64 to SqlcipherExtension.androidCompilerOptions, 
@@ -228,7 +229,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
             }
         }
         openssl {
-            tagName = "openssl-3.0.1"
+            tagName = "openssl-3.1.2"
             useGit = false
             configureOptions = OpensslExtension.smallConfigureOptions
             buildSpecificOptions = OpensslExtension.buildOptionsMap
@@ -240,7 +241,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
 Using this configuration, running Gradle task `sqlcipherBuildAll` will run all the tasks required to perform the designated builds. Only build tasks supported on the host running gradle will be run, others will be skipped.
 
-In the above DSL, SqlCipher 4.5.0 would be built using a source archive (useGit = false) from Github (.zip if running Gradle on windows, .tar.gz if not). Only tasks for build types specified in **builds(...)** function that are valid for the current Host OS will be performed. sqlCipherTargets directory, each buildType having its own subdirectory. The project buildDir directory will also contain "srcOpenssl" and "srcSqlcipher" subdirectories. These will contain one subdirectory for each configured build type, containing source and all respective build artifacts.  
+In the above DSL, SqlCipher 4.5.4 would be built using a source archive (useGit = false) from Github (.zip if running Gradle on windows, .tar.gz if not). Only tasks for build types specified in **builds(...)** function that are valid for the current Host OS will be performed. sqlCipherTargets directory, each buildType having its own subdirectory. The project buildDir directory will also contain "srcOpenssl" and "srcSqlcipher" subdirectories. These will contain one subdirectory for each configured build type, containing source and all respective build artifacts.  
 
 The sqlcipher `compilerOptions` are set to a default list above. These options are used by all builds regardless of build type.  Any kotlin expression that evaluates to a List<String> is valid. The intent is each option is one entry in the list. These can be SQLITE option definitions or other compiler command line options. See the default definitions below for an example of how this can be specified. 
 

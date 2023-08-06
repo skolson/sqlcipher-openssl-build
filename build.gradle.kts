@@ -2,16 +2,16 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.gradle.ext.ProjectSettings
 
 plugins {
-    kotlin("jvm") version "1.5.31"
+    kotlin("jvm") version "1.8.21"
     `java-gradle-plugin`
-    id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.1"
-    id("com.gradle.plugin-publish") version "0.19.0"
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
+    id("com.gradle.plugin-publish") version "0.21.0"
     `maven-publish`
 }
 
 val groupName = "com.oldguy.gradle"
 val artifactName = "sqlcipher-openssl-build"
-val versionString = "0.3.4"
+val versionString = "0.3.5"
 group = groupName
 version = versionString
 
@@ -29,12 +29,8 @@ java {
 }
 
 dependencies {
-    implementation("org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.6.0.202305301015-r")
     testImplementation(kotlin("test"))
-}
-
-tasks.withType<KotlinCompile>() {
-    kotlinOptions.jvmTarget = "15"
 }
 
 pluginBundle {
@@ -54,6 +50,16 @@ gradlePlugin {
         }
     }
 }
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
+}
+
 afterEvaluate {
     publishing {
         repositories {
@@ -77,12 +83,12 @@ afterEvaluate {
  * The code below remedies a classpath issue with running unit tests using Gradle Runner using Idea. Unknown if
  * this is required with Android Studio - it is untried there yet. But only applies to running unit tests.
  */
-val fixIdeaPluginClasspath = tasks.create("fixIdeaPluginClasspath") {
+val fixIdeaPluginClasspath: Task = tasks.create("fixIdeaPluginClasspath") {
     doFirst {
         tasks.pluginUnderTestMetadata.configure {
-            val ideaClassesPath = project.buildDir.toPath()
+            val ideaClassesPath = project.layout.buildDirectory.get().asFile
                     .resolveSibling("out")
-                    .resolve("production").toFile()
+                    .resolve("production")
             val newClasspath = pluginClasspath.toMutableList()
             newClasspath.add(0, ideaClassesPath)
             pluginClasspath.setFrom(newClasspath)

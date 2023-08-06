@@ -29,7 +29,7 @@ abstract class SqlCipherGitTask: GitCheckoutTask() {
 
 abstract class SqlCipherDownloadTask: DownloadArchiveTask() {
     @get:Input
-    abstract override val url: Property<URL>
+    abstract override val url: Property<String>
     @get:OutputFile
     abstract override val downloadFile: RegularFileProperty
 }
@@ -50,8 +50,8 @@ class SqlCipherBuild(target: Project,
     override val useGit: Boolean get() = ext.useGit
     override val gitUri:String get() = ext.githubUri
     override val gitTagName:String get() = ext.tagName
-    override val downloadUrl: URL get() = URL("${ext.githubUri}/archive/$downloadFileName")
-    override val srcDir get() = target.buildDir.resolve(ext.srcDirectory)
+    override val downloadUrl: String get() = "${ext.githubUri}/archive/$downloadFileName"
+    override val srcDir get() = target.layout.buildDirectory.get().asFile.resolve(ext.srcDirectory)
     override lateinit var gitTask: TaskProvider<out GitCheckoutTask>
     override lateinit var downloadTask: TaskProvider<out DownloadArchiveTask>
     private val sqlcipherDir get() = "$buildName-${ext.version}"
