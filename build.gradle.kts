@@ -5,7 +5,7 @@ plugins {
     kotlin("jvm") version "1.8.21"
     `java-gradle-plugin`
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
-    id("com.gradle.plugin-publish") version "0.21.0"
+    id("com.gradle.plugin-publish") version "1.2.0"
     `maven-publish`
 }
 
@@ -33,13 +33,9 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
-pluginBundle {
+gradlePlugin {
     website = "https://github.com/skolson/sqlcipher-openssl-build"
     vcsUrl = "https://github.com/skolson/sqlcipher-openssl-build.git"
-    tags = listOf("openssl", "sqlcipher")
-}
-
-gradlePlugin {
     plugins {
         create(artifactName) {
             // This ID is used by the dependent projects in the plugins block
@@ -47,6 +43,7 @@ gradlePlugin {
             displayName = "OpenSSL and SqlCipher builds"
             description = "Automated builds of OpenSSL and SqlCipher, 64 bit only, for Windows, Linux and Mac build hosts. Multiple target hosts including Android, VStudio, mingw, Linux. Mac, IOS"
             implementationClass = "com.oldguy.gradle.SqlCipherPlugin"
+            tags = listOf("openssl", "sqlcipher")
         }
     }
 }
