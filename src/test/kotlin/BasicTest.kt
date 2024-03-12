@@ -25,20 +25,21 @@ internal class PluginBuildTest {
     import com.oldguy.gradle.BuildType
 
     plugins {
-        id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.3.5"
+        id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.4.0"
     }
    
 
     sqlcipher {
         useGit = false
-        version = "4.5.4"
+        version = "4.5.6"
         compilerOptions = SqlcipherExtension.defaultCompilerOptions
         buildCompilerOptions = mapOf(
             BuildType.androidX64 to SqlcipherExtension.androidCompilerOptions, 
             BuildType.androidArm64 to SqlcipherExtension.androidCompilerOptions, 
             BuildType.iosX64 to SqlcipherExtension.iosCompilerOptions, 
             BuildType.iosArm64 to SqlcipherExtension.iosCompilerOptions, 
-            BuildType.macosX64 to SqlcipherExtension.macOsCompilerOptions
+            BuildType.macosX64 to SqlcipherExtension.macOsCompilerOptions,
+            BuildType.macosArm64 to SqlcipherExtension.macOsCompilerOptions
         )
 
         //builds("vStudio64", "androidX64", "androidArm64", "mingwX64", "linuxX64")
@@ -80,7 +81,7 @@ internal class PluginBuildTest {
             }
         }
         openssl {
-            tagName = "openssl-3.1.2"
+            tagName = "openssl-3.2.1"
             useGit = false
             configureOptions = OpensslExtension.smallConfigureOptions
             buildSpecificOptions = OpensslExtension.buildOptionsMap
@@ -91,6 +92,7 @@ internal class PluginBuildTest {
 
         val result = gradleRunner
             .withArguments("sqlcipherBuildAll", "--stacktrace", "--warning-mode", "all")
+            //.withArguments("sqlcipherBuildmacosArm64", "--stacktrace", "--warning-mode", "all")
             //.withArguments("opensslBuildiosX64", "--stacktrace", "--info", "-Dorg.gradle.debug=true", "--warning-mode", "all")
                 //.withArguments("opensslBuildmingw64", "--stacktrace")
                 //.withArguments("sqlcipherBuildvStudio64", "--stacktrace", "-Dorg.gradle.debug=true")

@@ -2,6 +2,16 @@
 
 ###Version history
 
+### 0.4.0 2024-03
+
+- Gradle 8.6
+- Kotlin 1.9.22
+- com.gradle.plugin-publish 1.2.1
+- org.eclipse.jgit:org.eclipse.jgit 6.9.0.202403050737-r
+- Add support for Macos arm64 architecture to both openssl and sqlcipher builds
+- Plugin test script now updated to OpenSSL 3.2.1 and SqlCipher 4.5.6
+- NOTE: macosArm64 target builds with no errors, but bild has not beenm tested on Apple Mac M1 hardware.
+
 ### 0.3.5 2023-08
 
 - For Gradle 9 compatibility, change all input properties of type "url" to String. String Property value must be valid for java.net.URL constructor

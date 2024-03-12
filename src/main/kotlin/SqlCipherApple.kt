@@ -29,6 +29,9 @@ class SqlCipherApple(
          */
         val options = buildString {
             if (buildType == BuildType.iosArm64) append("-arch arm64 ")
+            if (buildType == BuildType.macosArm64) {
+                append("-arch arm64 -target arm64-apple-macos ")
+            }
             compilerOptions.forEach { append("$it ") }
             config.options(buildType).forEach { append("$it ") }
             append("-I. -I${opensslIncludeDir.absolutePath} -fPIC -O3")

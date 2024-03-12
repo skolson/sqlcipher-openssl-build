@@ -2,16 +2,16 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.gradle.ext.ProjectSettings
 
 plugins {
-    kotlin("jvm") version "1.8.21"
+    kotlin("jvm") version "1.9.22"
     `java-gradle-plugin`
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
-    id("com.gradle.plugin-publish") version "1.2.0"
+    id("com.gradle.plugin-publish") version "1.2.1"
     `maven-publish`
 }
 
 val groupName = "com.oldguy.gradle"
 val artifactName = "sqlcipher-openssl-build"
-val versionString = "0.3.5"
+val versionString = "0.4.0"
 group = groupName
 version = versionString
 
@@ -29,7 +29,7 @@ java {
 }
 
 dependencies {
-    implementation("org.eclipse.jgit:org.eclipse.jgit:6.6.0.202305301015-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r")
     testImplementation(kotlin("test"))
 }
 

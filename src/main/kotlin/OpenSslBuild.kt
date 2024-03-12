@@ -38,8 +38,8 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
     : Builder(target, sqlcipherExt.toolsExt)
 {
     override val buildName = constBuildName
-    override lateinit var gitTask: TaskProvider<out GitCheckoutTask>
-    override lateinit var downloadTask: TaskProvider<out DownloadArchiveTask>
+    override var gitTask: TaskProvider<out GitCheckoutTask>
+    override var downloadTask: TaskProvider<out DownloadArchiveTask>
 
     private val ext = sqlcipherExt.opensslExt
 
@@ -137,6 +137,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
                     BuildType.linuxX64 -> {
                     }
                     BuildType.macosX64,
+                    BuildType.macosArm64,
                     BuildType.iosArm64,
                     BuildType.iosX64 -> {
                     }

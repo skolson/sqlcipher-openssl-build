@@ -57,6 +57,11 @@ enum class BuildType {
     macosX64,
 
     /**
+     * Mac OS Big Sur or later, 64 bit ARM architecture
+     */
+    macosArm64,
+
+    /**
      * Android ARM 64-bit using the Android NDK, supported on all hosts
      */
     androidArm64,
@@ -72,12 +77,12 @@ enum class BuildType {
     vStudio64;
 
     val host = HostOs.query()
-    val isAndroid = ordinal == 5 || ordinal == 6
+    val isAndroid = ordinal == 6 || ordinal == 7
     val isIos = ordinal == 2 || ordinal == 3
-    val isMacOs = isIos || isAndroid || ordinal == 4
-    val isWindowsOnly = when (ordinal) { 0, 7 -> true else -> false }
+    val isMacOs = isIos || isAndroid || ordinal == 4 || ordinal == 5
+    val isWindowsOnly = when (ordinal) { 0, 8 -> true else -> false }
     val isWindows = isWindowsOnly || isAndroid
-    val isLinux = when (ordinal) { 1, 5, 6 -> true else -> false }
+    val isLinux = isAndroid || ordinal == 1
     val isThisHost = when (host) {
         HostOs.LINUX -> isLinux
         HostOs.WINDOWS -> isWindows
@@ -457,6 +462,7 @@ open class AppleToolExtension {
     var platforms = mapOf(
         BuildType.iosX64 to "iPhoneSimulator",
         BuildType.iosArm64 to "iPhoneOS",
+        BuildType.macosArm64 to "MacOSX",
         BuildType.macosX64 to "MacOSX"
     )
 
@@ -480,7 +486,7 @@ open class AppleToolExtension {
      */
     fun options(buildType: BuildType): List<String> {
         val all = listOf("-isysroot ${crossPath(buildType)}/SDKs/${platform(buildType)}.sdk")
-        return if (buildType == BuildType.macosX64)
+        return if (buildType == BuildType.macosX64 || buildType == BuildType.macosArm64)
             all
         else
             all + listOf("-miphoneos-version-min=$sdkVersionMinimum")
@@ -542,7 +548,8 @@ open class OpensslExtension {
             BuildType.linuxX64 to iosConfigureOptions,
             BuildType.iosArm64 to iosConfigureOptions,
             BuildType.iosX64 to iosConfigureOptions,
-            BuildType.macosX64 to iosConfigureOptions
+            BuildType.macosX64 to iosConfigureOptions,
+            BuildType.macosArm64 to iosConfigureOptions
         )
     }
 }

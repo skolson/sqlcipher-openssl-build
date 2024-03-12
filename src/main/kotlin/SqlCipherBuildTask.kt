@@ -100,6 +100,7 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): Bui
             BuildType.androidX64,
             BuildType.androidArm64 -> androidBuild(buildType, s, t, i, lib)
             BuildType.macosX64,
+            BuildType.macosArm64,
             BuildType.iosArm64,
             BuildType.iosX64 -> appleBuild(buildType, s, t, i)
         }

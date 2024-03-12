@@ -70,6 +70,10 @@ abstract class OpensslBuildTask @Inject constructor(buildType: BuildType)
                 linuxScript(buildSrcDir, "darwin64-x86_64-cc")
                 applePatterns + "*.dylib"
             }
+            BuildType.macosArm64 -> {
+                linuxScript(buildSrcDir, "darwin64-arm64-cc")
+                applePatterns + "*.dylib"
+            }
             BuildType.iosX64,
             BuildType.iosArm64 -> {
                 iosScript(buildSrcDir, buildType)
