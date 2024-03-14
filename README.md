@@ -42,6 +42,7 @@ The plugin successfully performs 64 bit builds of these combinations.  Other unl
 | 3.0.1           | 4.5.1             | 3.37.2         |
 | 3.0.3           | 4.5.1             | 3.37.2         |
 | 3.1.2           | 4.5.4             | 3.41.2         |
+| 3.2.1           | 4.5.6             | 3.44.2         |
 
 ## OpenSSL
 *From the OpenSSL site:*
@@ -89,7 +90,7 @@ There is some complexity involved with correctly building OpenSSL and SqlCipher 
 - Provide additional documentation on platform-specific build details, with initial focus on Windows host builds. 
 
 ## Environments 
-This plugin has been tested with Gradle up to 7.3.3 so far. Older than V6.6.1 versions of Gradle should work, but are untested.  Host operating systems tested so far include Windows 10 and 11, Ubuntu 14.04, Mac OS Big Sur. Plugin source is Kotlin 1.5.31. 
+This plugin has been tested with Gradle up to 8.6 so far. Older than V6.6.1 versions of Gradle should work, but are untested.  Host operating systems tested so far include Windows 10 and 11, Ubuntu 14.04, Mac OS Big Sur. Plugin source is Kotlin 1.5.31. 
 
 Windows support is included for three tool chains, each with its own requirements. Windows builds have to be run on a Windows host:
 - Visual Studio 2019 Community Edition
@@ -119,9 +120,10 @@ Windows support is included for three tool chains, each with its own requirement
 Mac OS support        
 - OpenSSL 3 build issues warning "Cannot find "WWW::Curl::Easy" in podpath", but still seems to work
 - all Apple builds use the standard SDK path structure and the default links for each platform, so the SDK version used is determined by the SDK install. Explicit configuration of an older installed SDK is not supported (but would be an easy pull request if desired).
+- both kotlin targets macosX64 and macosArm64 are supported.
 
 IOS support
-- Xcode 13.x standard install used
+- Xcode 13.x or later standard install used
 - In the current plugin only iPhoneOS 64 bit, and iosSimulator build types are supported. 
 
 ## Features
@@ -136,6 +138,7 @@ IOS support
         - androidX64
     - Apple Mac builds
         - macX64 Mac on intel
+        - macArm64 Mac on Arm (like Mac on M1 chip)
         - iosX64 (IOS simulator on intel)
         - iosArm64 
 
@@ -163,7 +166,7 @@ Use the plugins DSL in build.gradle.kts to declare enable the plugin:
 ```
     plugins {
             ...
-            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.3.4"
+            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.4.0"
     }
 ```
 
@@ -175,14 +178,15 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
     sqlcipher {
         useGit = false
-        version = "4.5.4"
+        version = "4.5.6"
         compilerOptions = SqlcipherExtension.defaultCompilerOptions
         buildCompilerOptions = mapOf(
             BuildType.androidX64 to SqlcipherExtension.androidCompilerOptions, 
             BuildType.androidArm64 to SqlcipherExtension.androidCompilerOptions, 
             BuildType.iosX64 to SqlcipherExtension.iosCompilerOptions, 
             BuildType.iosArm64 to SqlcipherExtension.iosCompilerOptions, 
-            BuildType.macosX64 to SqlcipherExtension.macOsCompilerOptions
+            BuildType.macosX64 to SqlcipherExtension.macOsCompilerOptions,
+            BuildType.macosArm64 to SqlcipherExtension.macOsCompilerOptions
         )
 
         // examples for specifying desired builds
@@ -229,7 +233,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
             }
         }
         openssl {
-            tagName = "openssl-3.1.2"
+            tagName = "openssl-3.2.1"
             useGit = false
             configureOptions = OpensslExtension.smallConfigureOptions
             buildSpecificOptions = OpensslExtension.buildOptionsMap
@@ -241,7 +245,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
 Using this configuration, running Gradle task `sqlcipherBuildAll` will run all the tasks required to perform the designated builds. Only build tasks supported on the host running gradle will be run, others will be skipped.
 
-In the above DSL, SqlCipher 4.5.4 would be built using a source archive (useGit = false) from Github (.zip if running Gradle on windows, .tar.gz if not). Only tasks for build types specified in **builds(...)** function that are valid for the current Host OS will be performed. sqlCipherTargets directory, each buildType having its own subdirectory. The project buildDir directory will also contain "srcOpenssl" and "srcSqlcipher" subdirectories. These will contain one subdirectory for each configured build type, containing source and all respective build artifacts.  
+In the above DSL, SqlCipher would be built using a source archive (useGit = false) from Github (.zip if running Gradle on windows, .tar.gz if not). Only tasks for build types specified in **builds(...)** function that are valid for the current Host OS will be performed. sqlCipherTargets directory, each buildType having its own subdirectory. The project buildDir directory will also contain "srcOpenssl" and "srcSqlcipher" subdirectories. These will contain one subdirectory for each configured build type, containing source and all respective build artifacts.  
 
 The sqlcipher `compilerOptions` are set to a default list above. These options are used by all builds regardless of build type.  Any kotlin expression that evaluates to a List<String> is valid. The intent is each option is one entry in the list. These can be SQLITE option definitions or other compiler command line options. See the default definitions below for an example of how this can be specified. 
 
@@ -253,6 +257,16 @@ The gradle command line logging option `--info` can be specified to cause verbos
 
 **Note** - The build process is kinda long for OpenSSL and has to happen for each target. On a decent but not high end build machine OpenSSL for mingw64 takes about 5 minutes to build. Linux OpenSSL builds are significantly faster. SqlCipher builds much quicker, but patience is required when running lots of target builds in one Gradle run. 
 
+## Usage Exapmle
+
+For an example that uses this plugin to build a kotlin multi-platform library, see github repo: https://github.com/skolson/KmpSqlencrypt. It has working usage of these types:
+- C++ thin wrapper accessed via JNI and built with the Android NDK abd CMake for use with Android builds
+- Kotlin native usage via cinterop for various Native platforms (no JVM so no JNI or C++) including ios and Mac.
+
+The gradle scripts contains usage of this plugin with examples of where plugin outputs can be copied for use. It also has code for JNI usage (for android and JVM platforms), and for Native Kotlin usage via cinterop. In both cases the JNI C++ code and the Native Kotlin code are thin wrappers of the sqlite/sqlcipher C API allowing the higher-level portions of the library to be written with standard Kotlin Multiplatform code.  
+
+Typical usage once this is set up is to manually run gradle task `sqlcipherBuildAll` whenever SqlCipher and/or OpenSSL have new releases. Once the outputs (libraries and includes) of the plugin are produced (assuming no errors) for a particular release, the libraries and include files are reused for all subsequent project builds.
+
 ##Reference
 
 **Vocabulary**
@@ -261,9 +275,9 @@ The gradle command line logging option `--info` can be specified to cause verbos
 
 **Notes**
 
-Most all of the build activities create small text files in support of the build process.  They can be a shell script, a bat file, or some flavor of make file.  The builds use existing make files and other artifacts with no changes, these additional files are used "on top" so to speak of the existing stuff.  These files are created in the respective source directories, used there and left there with the intent that anyone curious about the build details can examine/change/run these files manually.  Thay are all located at the root of the respective source directory, and all names start with the literal `"Plugin-"`
+Most all the build activities create small text files in support of the build process.  They can be a shell script, a bat file, or some flavor of make file.  The builds use existing make files and other artifacts with no changes, these additional files are used "on top" so to speak of the existing stuff.  These files are created in the respective source directories, used there and left there with the intent that anyone curious about the build details can examine/change/run these files manually.  They are all located at the root of the respective source directory, and all names start with the literal `"Plugin-"`
 
-All of the builds rely on the configurations in the DSL, and create a set of Gradle tasks that perform the various steps required.  Below is a list of all of these tasks, followed by the reference information for DSL configuration.
+All the builds rely on the configurations in the DSL, and create a set of Gradle tasks that perform the various steps required.  Below is a list of all of these tasks, followed by the reference information for DSL configuration.
 
 The current version of the plugin only supports 64 bit tools and host OSs. Build tasks are provided only for building 64 bit targets using these tools. 
 
@@ -273,15 +287,16 @@ The current version of the plugin only supports 64 bit tools and host OSs. Build
 Available Build Types are listed here. Gradle tasks registered are based on these as selected in the DSL. As is typical with Gradle, ANY of the build processes invoked by the plugin cause the plugin to punt. The plugin copies console output from the build processes to the gradle console. Currently this is done ate process completion.   
 
 | **Build Type** | Supporting Hosts    | Description                                                                                                                                                                                                                         |
-|----------------|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| vstudio64      | Windows             | Visual Studio Community Edition 2019 is used as the compiler/linker and produces ,lib files and .dll files (and other file types) usable with any visual studio project. Older versions of Visual Studio may work but are untested. |
-| mingwX64       | Windows             | MSYS2 and MINGW64 toolchains are used to produce mingw static and shared libs on a Windows host                                                                                                                                     |
-| androidArm64   | Windows, Linux, Mac | Uses the Android NDK configured in **tools** DSL to build 64 bit ARM static and shared libraries                                                                                                                                    |
-| androidX64     | Windows, Linux, Mac | Uses the Android NDK configured in **tools** DSL to build 64 bit Intel/AMD static and shared libraries                                                                                                                              |
-| linuxX64       | Linux               | Standard GCC toolchain is used to produce static and shared libraries and the command line utility for sqlcipher. Initially tested on Ubuntu                                                                                        |
-| iosX64         | Mac OS Big Sur      | Xcode 13.x is used                                                                                                                                                                                                                  |
-| iosArm64       | Mac OS Big Sur      | Xcode 13.x is used                                                                                                                                                                                                                  |
-| macosX64       | Mac OS Big Sur      | Xcode 13.x is used                                                                                                                                                                                                                  |
+|---------------|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| vstudio64     | Windows             | Visual Studio Community Edition 2019 is used as the compiler/linker and produces ,lib files and .dll files (and other file types) usable with any visual studio project. Older versions of Visual Studio may work but are untested. |
+| mingwX64      | Windows             | MSYS2 and MINGW64 toolchains are used to produce mingw static and shared libs on a Windows host                                                                                                                                     |
+| androidArm64  | Windows, Linux, Mac | Uses the Android NDK configured in **tools** DSL to build 64 bit ARM static and shared libraries                                                                                                                                    |
+| androidX64    | Windows, Linux, Mac | Uses the Android NDK configured in **tools** DSL to build 64 bit Intel/AMD static and shared libraries                                                                                                                              |
+| linuxX64      | Linux               | Standard GCC toolchain is used to produce static and shared libraries and the command line utility for sqlcipher. Initially tested on Ubuntu                                                                                        |
+| iosX64        | Mac OS              | Xcode 13.x or later is used                                                                                                                                                                                                         |
+| iosArm64      | Mac OS              | Xcode 13.x or later is used                                                                                                                                                                                                                |
+| macosX64      | Mac OS              | Xcode 13.x or later is used                                                                                                                                                                                                                |
+| macosArm64    | Mac OS (ARM64 CPU)  | Xcode 13.x or later is used                                                                                                                                                                                                                |
 
 
 Configuration DSL specifies the build types to be performed. Task names specific to a build type contain the build type in the name.  In the names below for these tasks, the build type is abbreviated to *BT*. Note that in the case of SqlCipher, no build-specific Verify tasks are needed, as it uses the same set of tools used by OpenSSL builds, which handles the verifications.   
@@ -551,7 +566,8 @@ This map is the default values for the build-specific options that are added. If
         BuildTypes.linuxX64 to iosConfigureOptions,
         BuildTypes.iosArm64 to iosConfigureOptions,
         BuildTypes.iosX64 to iosConfigureOptions,
-        BuildTypes.macosX64 to iosConfigureOptions
+        BuildTypes.macosX64 to iosConfigureOptions,
+        BuildTypes.macosArm64 to iosConfigureOptions
     )
 
 ### Tasks - Inputs and Outputs ###
