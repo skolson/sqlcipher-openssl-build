@@ -11,7 +11,7 @@ At a high level, this is current status and near-term plans for the plugin. See 
     - Mingw64 using MSYS2 and a variety of installed MSYS2 packages
     - Android 64 bit (androidArm64, androidX64) builds using NDK 21.3.6528147 (r20b) 
     - Android 64 bit (androidArm64, androidX64) builds using NDK 22.1.7171670 (r21b)
-    - Openssl 1.1.k and earlier has an issue with android NDK r22 and later. See [OpenSSL Github pull 13694](https://github.com/openssl/openssl/pull/13694). The current 3.0.0 beta has the required fix. So to use the newer NDK versions, use 3.x of openssl. The fix is also backported and merged, so should be available in 1.1.1l or later. 
+    - Openssl 1.1.k and earlier has an issue with android NDK r22 and later. See [OpenSSL Github pull 13694](https://github.com/openssl/openssl/pull/13694). 3.0.0 beta has the required fix. So to use the newer NDK versions, use 3.0 or later of openssl. The fix is also backported and merged, so should be available in 1.1.1l or later. 
     - Android 64 bit (androidArm64, androidX64) builds using NDK 23.0.7599858 (r23)
     - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2)
 - Linux builds on Ubuntu
@@ -22,7 +22,7 @@ At a high level, this is current status and near-term plans for the plugin. See 
     - ios64
     - iosArm64
     - macX64 - mac on intel
-    - macM1 - future
+    - macArm64 - mac on M1 or other 64-bit Arm chip
     - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2) or later
 - Published in the Gradle plugin repository under name `sqlcipher-openssl-build` 
 - Android configuration - easy add of extra source files (JNI wrappers) to standard library
@@ -83,7 +83,8 @@ There is some complexity involved with correctly building OpenSSL and SqlCipher 
     - MacOS
         - iosX64 (simulator on intel)
         - iosArm64 
-        - MacOS 64 bit intel 
+        - MacOS 64-bit intel
+        - MacOS 64-bit ARM
         - Android NDK androidArm64, androidX64
 
 - OpenSSL and Sqlite both offer a rich set of compile options. The plugin offers some standard option sets for common requirements that are easily selectable and still customizable. 
