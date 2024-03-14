@@ -23,8 +23,11 @@ abstract class GitCheckoutTask @Inject constructor(): DefaultTask() {
         group = "build"
     }
 
+    @get:Input
     abstract val uri: Property<String>
+    @get:Input
     abstract val tagName: Property<String>
+    @get:OutputDirectory
     abstract val sourceDirectory: DirectoryProperty
 
     fun setup(gitUri: String, gitTagName: String, srcDir: File) {
@@ -53,7 +56,9 @@ abstract class DownloadArchiveTask @Inject constructor(): DefaultTask() {
         group = "build"
     }
 
+    @get:Input
     abstract val url: Property<String>
+    @get:OutputFile
     abstract val downloadFile: RegularFileProperty
 
     fun setup(downloadUrl: String, outputFile: File) {
@@ -83,7 +88,9 @@ abstract class ExtractArchiveTask @Inject constructor(): DefaultTask() {
         group = "build"
     }
 
+    @get:OutputFile
     abstract val archiveFile: RegularFileProperty
+    @get:OutputDirectory
     abstract val sourceDirectory: DirectoryProperty
 
     /**
