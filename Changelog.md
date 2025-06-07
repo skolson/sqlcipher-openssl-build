@@ -2,6 +2,13 @@
 
 ###Version history
 
+### 0.5.0 2025-06
+- Gradle 8.14.1
+- Kotlin 2.1.21
+- om.gradle.plugin-publish 1.3.1
+- Fixed a deprecated usage of gradle Project exec function that would break in Gradle 9.0
+- Removed obsolete Idea classpath workaround from build.gradle.kts
+
 ### 0.4.0 2024-03
 
 - Gradle 8.6

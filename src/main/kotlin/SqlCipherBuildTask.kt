@@ -6,10 +6,14 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.process.ExecOperations
 import java.io.File
 import javax.inject.Inject
 
-abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): BuilderTask(buildType) {
+abstract class SqlcipherBuildTask @Inject constructor(
+    buildType: BuildType,
+    execOperations: ExecOperations
+): BuilderTask(buildType, execOperations) {
     @Internal
     override val buildName = "sqlcipher"
 
@@ -179,13 +183,13 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): Bui
             """.trimIndent()
         }
         runner.logger.lifecycle("$shFilename compilerOptions: $compilerOptionsString")
-        runner.command(srcDir, "./$shFilename") { }
+        runner.command(srcDir, "./$shFilename", execOperations) { }
         runner.copyResults(srcDir.resolve(".libs"), targetDir)
         runner.copyResults(srcDir, targetDir, listOf(moduleNameH, moduleName))
     }
 
     private fun androidBuild(buildType: BuildType, srcDir: File, targetDir: File, opensslIncludeDir: File, opensslLibDir: File) {
-        val builder = SqlCipherAndroid(runner, srcDir, buildType, androidMinimumSdk.get())
+        val builder = SqlCipherAndroid(runner, srcDir, buildType, androidMinimumSdk.get(), execOperations)
         builder.build(opensslIncludeDir,
             opensslLibDir,
             compilerOptionsString,
@@ -197,7 +201,7 @@ abstract class SqlcipherBuildTask @Inject constructor(buildType: BuildType): Bui
     }
 
     private fun appleBuild(buildType: BuildType, srcDir: File, targetDir: File, opensslIncludeDir: File) {
-        val builder = SqlCipherApple(runner, srcDir, buildType, iosConfig)
+        val builder = SqlCipherApple(runner, srcDir, buildType, iosConfig, execOperations)
         val result = builder.build(opensslIncludeDir,
             allCompilerOptions)
         if (!srcDir.resolve(SqlCipherApple.libraryName).exists())

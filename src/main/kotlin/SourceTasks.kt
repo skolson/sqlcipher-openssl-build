@@ -8,7 +8,6 @@ import org.gradle.api.tasks.*
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URI
-import java.net.URL
 import java.nio.channels.Channels
 import javax.inject.Inject
 
@@ -69,7 +68,7 @@ abstract class DownloadArchiveTask @Inject constructor(): DefaultTask() {
 
     @TaskAction
     fun download() {
-        val readChannel = Channels.newChannel(URL(url.get()).openStream())
+        val readChannel = Channels.newChannel(URI(url.get()).toURL().openStream())
         val fileOS = FileOutputStream(downloadFile.get().asFile)
         val writeChannel = fileOS.channel
         writeChannel.transferFrom(readChannel, 0, Long.MAX_VALUE)

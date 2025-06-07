@@ -1,17 +1,14 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jetbrains.gradle.ext.ProjectSettings
-
 plugins {
-    kotlin("jvm") version "1.9.22"
+    kotlin("jvm") version "2.1.21"
     `java-gradle-plugin`
-    id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
-    id("com.gradle.plugin-publish") version "1.2.1"
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.10"
+    id("com.gradle.plugin-publish") version "1.3.1"
     `maven-publish`
 }
 
 val groupName = "com.oldguy.gradle"
 val artifactName = "sqlcipher-openssl-build"
-val versionString = "0.4.0"
+val versionString = "0.5.0"
 group = groupName
 version = versionString
 
@@ -49,12 +46,8 @@ gradlePlugin {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 afterEvaluate {
@@ -71,40 +64,6 @@ afterEvaluate {
                 groupId    = groupName
                 artifactId = artifactName
                 version    = versionString
-            }
-        }
-    }
-}
-
-/**
- * The code below remedies a classpath issue with running unit tests using Gradle Runner using Idea. Unknown if
- * this is required with Android Studio - it is untried there yet. But only applies to running unit tests.
- */
-val fixIdeaPluginClasspath: Task = tasks.create("fixIdeaPluginClasspath") {
-    doFirst {
-        tasks.pluginUnderTestMetadata.configure {
-            val ideaClassesPath = project.layout.buildDirectory.get().asFile
-                    .resolveSibling("out")
-                    .resolve("production")
-            val newClasspath = pluginClasspath.toMutableList()
-            newClasspath.add(0, ideaClassesPath)
-            pluginClasspath.setFrom(newClasspath)
-        }
-    }
-}
-tasks.getByName("pluginUnderTestMetadata").mustRunAfter(fixIdeaPluginClasspath)
-
-fun org.gradle.plugins.ide.idea.model.IdeaProject.settings(block: ProjectSettings.() -> Unit) =
-        (this@settings as ExtensionAware).extensions.configure(block)
-
-fun ProjectSettings.taskTriggers(block: org.jetbrains.gradle.ext.TaskTriggersConfig.() -> Unit) =
-        (this@taskTriggers as ExtensionAware).extensions.configure("taskTriggers", block)
-
-idea {
-    project {
-        settings {
-            taskTriggers {
-                beforeBuild(fixIdeaPluginClasspath, tasks.pluginUnderTestMetadata)
             }
         }
     }

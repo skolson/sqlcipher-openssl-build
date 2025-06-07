@@ -9,6 +9,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.process.ExecOperations
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -53,13 +54,15 @@ object Logger {
     }
 }
 
-class SqlCipherPlugin: Plugin<Project> {
+class SqlCipherPlugin @Inject constructor(
+    private val execOperations: ExecOperations
+): Plugin<Project> {
 
     override fun apply(target: Project) {
         Logger.initialize(target)
         val ext = SqlcipherExtension.createExtensions(target)
-        val opensslTask = OpenSslBuild(target, ext)
-        val sqlcipherTask = SqlCipherBuild(target, ext)
+        val opensslTask = OpenSslBuild(target, ext, execOperations)
+        val sqlcipherTask = SqlCipherBuild(target, ext, execOperations)
         registerAll(target, opensslTask.buildName, ext.builds, false)
         registerAll(target, sqlcipherTask.buildName, ext.builds, true)
 

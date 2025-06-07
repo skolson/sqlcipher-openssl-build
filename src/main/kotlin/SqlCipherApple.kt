@@ -1,6 +1,7 @@
 package com.oldguy.gradle
 
 import org.gradle.api.GradleException
+import org.gradle.process.ExecOperations
 import java.io.File
 
 /**
@@ -11,7 +12,8 @@ class SqlCipherApple(
     private val runner:Runner,
     private val srcDir: File,
     private val buildType: BuildType,
-    private val config: AppleToolExtension
+    private val config: AppleToolExtension,
+    private val execOperations: ExecOperations
 ) {
     private val amalgamation = SqlcipherExtension.amalgamation
     fun build(opensslIncludeDir: File,
@@ -19,7 +21,8 @@ class SqlCipherApple(
         SqlCipherBuild.buildAmalgamation(
             srcDir,
             runner,
-            buildType
+            buildType,
+            execOperations
         )
         if (!srcDir.resolve(amalgamation).exists())
             throw GradleException("Amalgamation $amalgamation not found")
@@ -49,7 +52,7 @@ class SqlCipherApple(
             libtool -static -o $libraryName $objectName
             """.trimIndent()
         }
-        return runner.command(srcDir, "./$scriptName") { }
+        return runner.command(srcDir, "./$scriptName", execOperations) { }
     }
 
     companion object {

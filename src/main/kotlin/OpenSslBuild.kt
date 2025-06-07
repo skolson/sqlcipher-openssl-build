@@ -6,7 +6,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
-import java.net.URL
+import org.gradle.process.ExecOperations
 
 /**
  * Isolates the gradle input and output properties for OpenSSL tasks
@@ -34,8 +34,12 @@ abstract class OpenSslDownloadTask: DownloadArchiveTask() {
     abstract override val downloadFile: RegularFileProperty
 }
 
-class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension)
-    : Builder(target, sqlcipherExt.toolsExt)
+class OpenSslBuild(
+    target: Project,
+    private val sqlcipherExt: SqlcipherExtension,
+    execOperations: ExecOperations
+    )
+    : Builder(target, sqlcipherExt.toolsExt, execOperations)
 {
     override val buildName = constBuildName
     override var gitTask: TaskProvider<out GitCheckoutTask>
@@ -79,7 +83,7 @@ class OpenSslBuild(target: Project, private val sqlcipherExt: SqlcipherExtension
             task.setup(gitUri, gitTagName, gitDir)
         }
 
-        BuildType.values().forEach { buildType ->
+        BuildType.entries.forEach { buildType ->
             val gitCopyTaskName = taskName(copyTaskName, buildType)
             target.tasks.register(gitCopyTaskName, Copy::class.java) { task ->
                 task.dependsOn(gitTask)

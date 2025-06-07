@@ -5,8 +5,8 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.process.ExecOperations
 import java.io.File
-import java.net.URL
 
 /**
  * Isolates the gradle input and output properties for SqlCipher tasks
@@ -39,8 +39,9 @@ abstract class SqlCipherDownloadTask: DownloadArchiveTask() {
  * for each task, setting task properties from the various extension configuration values.
  */
 class SqlCipherBuild(target: Project,
-                     private val ext: SqlcipherExtension)
-    : Builder(target, ext.toolsExt)
+                     private val ext: SqlcipherExtension,
+                     execOperations: ExecOperations
+): Builder(target, ext.toolsExt, execOperations)
 {
     override val buildName = "sqlcipher"
     private val builds get() = ext.builds
@@ -52,17 +53,17 @@ class SqlCipherBuild(target: Project,
     override val gitTagName:String get() = ext.tagName
     override val downloadUrl: String get() = "${ext.githubUri}/archive/$downloadFileName"
     override val srcDir get() = target.layout.buildDirectory.get().asFile.resolve(ext.srcDirectory)
-    override lateinit var gitTask: TaskProvider<out GitCheckoutTask>
-    override lateinit var downloadTask: TaskProvider<out DownloadArchiveTask>
-    private val sqlcipherDir get() = "$buildName-${ext.version}"
-
-    init {
-        downloadTask = target.tasks.register("${buildName}Download", SqlCipherDownloadTask::class.java) { task ->
+    override var gitTask: TaskProvider<out GitCheckoutTask>
+    override var downloadTask: TaskProvider<out DownloadArchiveTask> =
+        target.tasks.register("${buildName}Download", SqlCipherDownloadTask::class.java) { task ->
             task.onlyIf {
                 !useGit
             }
             task.setup(downloadUrl, srcDir.resolve(downloadFileName))
         }
+    private val sqlcipherDir get() = "$buildName-${ext.version}"
+
+    init {
 
         gitTask = target.tasks.register("${buildName}Git", SqlCipherGitTask::class.java) { task ->
             task.onlyIf {
@@ -71,7 +72,7 @@ class SqlCipherBuild(target: Project,
             task.setup(gitUri, gitTagName, gitDir)
         }
 
-        BuildType.values().forEach { buildType ->
+        BuildType.entries.forEach { buildType ->
             val fullCopyTaskName = taskName(copyTaskName, buildType)
             target.tasks.register(fullCopyTaskName, Copy::class.java) { task ->
                 task.dependsOn(gitTask)
@@ -140,7 +141,8 @@ class SqlCipherBuild(target: Project,
         fun buildAmalgamation(
             srcDir: File,
             runner: Runner,
-            buildType: BuildType
+            buildType: BuildType,
+            execOperations: ExecOperations
         ) {
             val amalgamation = SqlcipherExtension.amalgamation
             if (srcDir.resolve(amalgamation).exists()) return
@@ -156,7 +158,7 @@ class SqlCipherBuild(target: Project,
             }
 
             runner.logger.info("create amalgamation source: $amalgamation")
-            runner.command(srcDir, "./$shFilename") { }
+            runner.command(srcDir, "./$shFilename", execOperations) { }
             runner.logger.info("Amalgamation source created: $amalgamation")
         }
     }

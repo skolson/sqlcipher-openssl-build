@@ -4,11 +4,15 @@ import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
+import org.gradle.process.ExecOperations
 import java.io.File
 import javax.inject.Inject
 
-abstract class OpensslBuildTask @Inject constructor(buildType: BuildType)
-    : BuilderTask(buildType) {
+abstract class OpensslBuildTask @Inject constructor(
+    buildType: BuildType,
+    execOperations: ExecOperations
+    )
+    : BuilderTask(buildType, execOperations) {
     @get:Input
     override val buildName = "openssl"
 
@@ -116,7 +120,7 @@ abstract class OpensslBuildTask @Inject constructor(buildType: BuildType)
             """.trimIndent()
         }
 
-        runner.command(srcDir, "./$shFilename") {
+        runner.command(srcDir, "./$shFilename", execOperations) {
             it.workingDir(srcDir)
             if (path.isNotEmpty())
                 it.environment("PATH", path)
@@ -150,7 +154,7 @@ abstract class OpensslBuildTask @Inject constructor(buildType: BuildType)
             """.trimIndent()
         }
 
-        runner.command(srcDir, "./$shFilename") {}
+        runner.command(srcDir, "./$shFilename", execOperations) {}
         return linuxPatterns
     }
 
@@ -169,7 +173,7 @@ abstract class OpensslBuildTask @Inject constructor(buildType: BuildType)
             """.trimIndent()
         }
 
-        runner.command(srcDir, "./$shFilename") {
+        runner.command(srcDir, "./$shFilename", execOperations) {
             it.workingDir(srcDir)
             if (path.isNotEmpty())
                 it.environment("PATH", path)

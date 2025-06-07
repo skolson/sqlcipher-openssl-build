@@ -3,12 +3,12 @@ package com.oldguy.gradle
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.process.ExecOperations
 import org.gradle.process.ExecResult
 import org.gradle.process.ExecSpec
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.lang.StringBuilder
-import java.net.URL
 
 /**
  * Helpers for running commands on the current host using Gradle Project exec(). Has these features:
@@ -17,7 +17,12 @@ import java.net.URL
  * 3. prints stderr(if any) followed by stdout, independent of whether the command failed
  * 4. If result is non-zero (command failed), throws GradleException of some flavor
  */
-class Runner(private val target: Project, private val host:HostOs, private val ext: WindowsToolExtension) {
+class Runner(
+    private val target: Project,
+    private val host:HostOs,
+    private val ext: WindowsToolExtension,
+    private val execOperations: ExecOperations
+) {
     val lineSeparator = if (host == HostOs.WINDOWS) "\r\n" else "\n"
     private lateinit var result: ExecResult
     val logger: org.gradle.api.logging.Logger = target.logger
@@ -33,7 +38,7 @@ class Runner(private val target: Project, private val host:HostOs, private val e
     fun executable(executable: String, setup: ((execSpec: ExecSpec) -> Unit)): String {
         val output = ByteArrayOutputStream()
         val err = ByteArrayOutputStream()
-        result = target.exec {
+        result = execOperations.exec {
             it.executable(executable)
             it.standardOutput = output
             it.errorOutput = err
@@ -57,12 +62,16 @@ class Runner(private val target: Project, private val host:HostOs, private val e
      * @param setup lambda for configuring ExecSpec, typically for additional args or setting environment vars.
      * @returns stderr (if any) followed by stdout, as a String.
      */
-    fun command(workingDir: File, command:String, setup: ((execSpec: ExecSpec) -> Unit)): String {
+    fun command(
+        workingDir: File,
+        command:String,
+        execOperations: ExecOperations,
+        setup: ((execSpec: ExecSpec) -> Unit)): String {
         try {
             val output = ByteArrayOutputStream()
             val err = ByteArrayOutputStream()
             if (host == HostOs.WINDOWS) {
-                result = target.exec {
+                result = execOperations.exec {
                     it.executable(ext.msys2Exec)
                     it.workingDir(workingDir)
                     it.standardOutput = output
@@ -75,7 +84,7 @@ class Runner(private val target: Project, private val host:HostOs, private val e
                     printExec(it)
                 }
             } else {
-                result = target.exec {
+                result = execOperations.exec {
                     it.executable(command)
                     it.workingDir(workingDir)
                     it.standardOutput = output
@@ -141,8 +150,11 @@ class Runner(private val target: Project, private val host:HostOs, private val e
 /**
  * Reusable parts of Build subclasses
  */
-abstract class Builder(val target: Project, val tools: ToolsExtension)
-{
+abstract class Builder(
+    val target: Project,
+    val tools: ToolsExtension,
+    val execOperations: ExecOperations
+) {
     val windows = tools.windows
     val android = tools.android
     val host = HostOs.query()
@@ -204,7 +216,7 @@ abstract class Builder(val target: Project, val tools: ToolsExtension)
     }
 
     fun makeRunner(): Runner {
-        return Runner(target, host, tools.windows)
+        return Runner(target, host, tools.windows, execOperations)
     }
 
     companion object {

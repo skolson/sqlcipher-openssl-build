@@ -4,9 +4,13 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import org.gradle.process.ExecOperations
 import java.io.File
 
-abstract class BuilderTask(@get:Input val buildType: BuildType): DefaultTask() {
+abstract class BuilderTask(
+    @get:Input val buildType: BuildType,
+    @get:Internal val execOperations: ExecOperations
+): DefaultTask() {
     private val groupName = "build"
 
     @get:Input
@@ -103,7 +107,7 @@ abstract class BuilderTask(@get:Input val buildType: BuildType): DefaultTask() {
         androidMinimumSdk.set(tools.android.minimumSdk)
         androidNdkRoot.set(tools.android.ndkRoot)
         r22OrLater = tools.android.r22OrLater
-        runner = Runner(project, host, windows)
+        runner = Runner(project, host, windows, execOperations)
     }
 
     fun listToString(list: List<String>): String {

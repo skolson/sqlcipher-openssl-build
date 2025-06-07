@@ -1,6 +1,7 @@
 package com.oldguy.gradle
 
 import org.gradle.api.GradleException
+import org.gradle.process.ExecOperations
 import java.io.File
 
 /**
@@ -11,7 +12,8 @@ class SqlCipherAndroid(
         private val runner:Runner,
         private val srcDir: File,
         private val buildType: BuildType,
-        androidMinimumSdk: Int)
+        androidMinimumSdk: Int,
+        private val execOperations: ExecOperations)
 {
     private val host get() = HostOs.query()
     private val sqlite3 = SqlcipherExtension.moduleName
@@ -59,7 +61,8 @@ class SqlCipherAndroid(
         SqlCipherBuild.buildAmalgamation(
             srcDir,
             runner,
-            buildType
+            buildType,
+            execOperations
         )
         val cFlags = StringBuilder()
         requiredCFlags.forEach { cFlags.append("$it ") }
@@ -127,7 +130,7 @@ class SqlCipherAndroid(
                 $commandLine
                 """.trimIndent()
             }
-            val result = runner.command(srcDir, "./$shFilename") { }
+            val result = runner.command(srcDir, "./$shFilename", execOperations) { }
             if (!outputDir.resolve(targetName).exists())
                 throw GradleException("Build $buildType failed. Script $shFilename did not produce $targetName in ${outputDir.absolutePath}")
             result
