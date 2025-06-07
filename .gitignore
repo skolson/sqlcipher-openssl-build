@@ -10,3 +10,4 @@
 /.gradle/
 /.idea/
 local.properties
+/.kotlin/
