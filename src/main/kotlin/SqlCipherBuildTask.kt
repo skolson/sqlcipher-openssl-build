@@ -50,10 +50,15 @@ abstract class SqlcipherBuildTask @Inject constructor(
     private val moduleNameH = SqlcipherExtension.moduleNameH
     private var targetsCopyTo: ((buildType: BuildType) -> File?)? = null
     private var copyCinteropIncludes:Boolean = false
+    private var tempOptionString = "--with-tempstore=yes"
 
-    override fun setToolsProperties(tools: ToolsExtension) {
+    override fun setToolsProperties(
+        tools: ToolsExtension,
+        tempOptionString: String
+    ) {
         super.setToolsProperties(tools)
         iosConfig = tools.apple
+        this.tempOptionString = tempOptionString
     }
 
     init {
@@ -171,7 +176,7 @@ abstract class SqlcipherBuildTask @Inject constructor(
                             buildOption: String = "") {
         // Note the -lm for the linux math library, not needed in mingw64. Without this when -DSQLITE_ENABLE_FTS5 specified, link error occurs
         val ldflags = "LDFLAGS=\"-L$opensslLib -lcrypto -lm\""
-        val cmdLine = "./configure $buildOption --enable-tempstore=yes --disable-tcl --enable-static=yes --with-crypto-lib=none " +
+        val cmdLine = "./configure $buildOption $tempOptionString --disable-tcl --enable-static=yes --with-crypto-lib=none " +
                 "$ldflags " +
                 "CFLAGS=\"$compilerOptionsString -I$opensslInclude\""
 

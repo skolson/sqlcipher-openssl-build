@@ -110,7 +110,13 @@ class SqlCipherBuild(target: Project,
                 it.onlyIf {
                     taskOk(builds, buildType) && ext.buildSqlCipher
                 }
-                it.setToolsProperties(ext.toolsExt)
+                // configure option changed with version 4.7.0 and later
+                val tokens = ext.version.split(".").map { it.trim().toInt() }
+                val tempStr = if (tokens[0] < 4 || (tokens[0] == 4 && tokens[1] < 7))
+                    "--enable-tempstore=yes"
+                else
+                    "--with-tempstore=yes"
+                it.setToolsProperties(ext.toolsExt, tempStr)
                 it.setup(
                     srcDir.resolve(buildType.name).resolve(sqlcipherDir),
                     opensslTask.includeDirectory.get().asFile,

@@ -8,6 +8,7 @@
 - om.gradle.plugin-publish 1.3.1
 - Fixed a deprecated usage of gradle Project exec function that would break in Gradle 9.0
 - Removed obsolete Idea classpath workaround from build.gradle.kts
+- Start using the SqlCipher configure option --with-tempstore=yes instead of --enable-tempstore=yes on versions 4.7.0 and later
 
 ### 0.4.0 2024-03
 
