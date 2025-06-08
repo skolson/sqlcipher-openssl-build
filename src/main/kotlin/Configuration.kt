@@ -105,15 +105,15 @@ enum class BuildType {
         /**
          * Convenience value for build scripts that want to limit builds by host
          */
-        val appleBuildTypes = values().filter { it.isMacOs || it.isIos || it.isAndroid }
+        val appleBuildTypes = entries.filter { it.isMacOs || it.isIos || it.isAndroid }
         /**
          * Convenience value for build scripts that want to limit builds by host
          */
-        val windowsBuildTypes = values().filter { it.isWindows }
+        val windowsBuildTypes = entries.filter { it.isWindows }
         /**
          * Convenience value for build scripts that want to limit builds by host
          */
-        val linuxBuildTypes = values().filter { it.isLinux }
+        val linuxBuildTypes = entries.filter { it.isLinux }
     }
 }
 
@@ -189,7 +189,7 @@ open class SqlcipherExtension {
                     else
                         Logger.logger.lifecycle("Ignoring buildType: ${it.name} on host OS ${it.host}")
                 }
-            } catch (exc: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 throw GradleException("Invalid BuildType string: $it")
             }
         }
@@ -220,7 +220,12 @@ open class SqlcipherExtension {
          */
         val providedOptions = listOf("SQLITE_THREADSAFE")
 
-        val sqlcipherRequiredOptions = listOf("-DSQLITE_HAS_CODEC","-DSQLCIPHER_CRYPTO_OPENSSL")
+        val sqlcipherRequiredOptions = listOf(
+            "-DSQLITE_HAS_CODEC",
+            "-DSQLCIPHER_CRYPTO_OPENSSL",
+            "-DSQLITE_EXTRA_INIT=sqlcipher_extra_init",
+            "-DSQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown"
+        )
         val defaultCompilerOptions = sqlcipherRequiredOptions + listOf(
             "-DNDEBUG=1",
             "-DSQLITE_OMIT_DEPRECATED",

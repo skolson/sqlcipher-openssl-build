@@ -50,15 +50,17 @@ abstract class SqlcipherBuildTask @Inject constructor(
     private val moduleNameH = SqlcipherExtension.moduleNameH
     private var targetsCopyTo: ((buildType: BuildType) -> File?)? = null
     private var copyCinteropIncludes:Boolean = false
-    private var tempOptionString = "--with-tempstore=yes"
+    private var optionString = "--with-tempstore=yes --enable-static=yes"
 
     override fun setToolsProperties(
-        tools: ToolsExtension,
-        tempOptionString: String
+        tools: ToolsExtension
     ) {
         super.setToolsProperties(tools)
         iosConfig = tools.apple
-        this.tempOptionString = tempOptionString
+    }
+
+    fun setOptionString(newOptionString: String) {
+        optionString = newOptionString
     }
 
     init {
@@ -176,7 +178,7 @@ abstract class SqlcipherBuildTask @Inject constructor(
                             buildOption: String = "") {
         // Note the -lm for the linux math library, not needed in mingw64. Without this when -DSQLITE_ENABLE_FTS5 specified, link error occurs
         val ldflags = "LDFLAGS=\"-L$opensslLib -lcrypto -lm\""
-        val cmdLine = "./configure $buildOption $tempOptionString --disable-tcl --enable-static=yes --with-crypto-lib=none " +
+        val cmdLine = "./configure $buildOption $optionString --disable-tcl " +
                 "$ldflags " +
                 "CFLAGS=\"$compilerOptionsString -I$opensslInclude\""
 
@@ -190,11 +192,12 @@ abstract class SqlcipherBuildTask @Inject constructor(
         runner.logger.lifecycle("$shFilename compilerOptions: $compilerOptionsString")
         runner.command(srcDir, "./$shFilename", execOperations) { }
         runner.copyResults(srcDir.resolve(".libs"), targetDir)
+        runner.copyResults(srcDir, targetDir, listOf("*.a", "*.so"))
         runner.copyResults(srcDir, targetDir, listOf(moduleNameH, moduleName))
     }
 
     private fun androidBuild(buildType: BuildType, srcDir: File, targetDir: File, opensslIncludeDir: File, opensslLibDir: File) {
-        val builder = SqlCipherAndroid(runner, srcDir, buildType, androidMinimumSdk.get(), execOperations)
+        val builder = SqlCipherAndroid(runner, srcDir, buildType, androidMinimumSdk.get(), execOperations, optionString)
         builder.build(opensslIncludeDir,
             opensslLibDir,
             compilerOptionsString,
@@ -206,7 +209,7 @@ abstract class SqlcipherBuildTask @Inject constructor(
     }
 
     private fun appleBuild(buildType: BuildType, srcDir: File, targetDir: File, opensslIncludeDir: File) {
-        val builder = SqlCipherApple(runner, srcDir, buildType, iosConfig, execOperations)
+        val builder = SqlCipherApple(runner, srcDir, buildType, iosConfig, execOperations, optionString)
         val result = builder.build(opensslIncludeDir,
             allCompilerOptions)
         if (!srcDir.resolve(SqlCipherApple.libraryName).exists())

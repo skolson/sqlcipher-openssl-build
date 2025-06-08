@@ -35,7 +35,9 @@ abstract class OpensslBuildTask @Inject constructor(
 
     private lateinit var config: AppleToolExtension
 
-    override fun setToolsProperties(tools: ToolsExtension) {
+    override fun setToolsProperties(
+        tools: ToolsExtension
+    ) {
         super.setToolsProperties(tools)
         config = tools.apple
     }

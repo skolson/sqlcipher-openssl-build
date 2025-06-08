@@ -99,6 +99,11 @@ abstract class BuilderTask(
         }
     }
 
+    /**
+     * Sets tool properties.
+     * @param tools the values parsed from the tools clause
+     * @param and optional string only used by SqlCipher
+     */
     open fun setToolsProperties(tools: ToolsExtension) {
         this.windows = tools.windows
         msys2UsrBin.set(tools.windows.msys2UsrBin)

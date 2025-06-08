@@ -26,7 +26,7 @@ java {
 }
 
 dependencies {
-    implementation("org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:7.3.0.202506031305-r")
     testImplementation(kotlin("test"))
 }
 

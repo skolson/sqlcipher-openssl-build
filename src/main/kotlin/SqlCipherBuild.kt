@@ -112,11 +112,13 @@ class SqlCipherBuild(target: Project,
                 }
                 // configure option changed with version 4.7.0 and later
                 val tokens = ext.version.split(".").map { it.trim().toInt() }
-                val tempStr = if (tokens[0] < 4 || (tokens[0] == 4 && tokens[1] < 7))
-                    "--enable-tempstore=yes"
+                it.setOptionString(
+                    if (tokens[0] < 4 || (tokens[0] == 4 && tokens[1] < 7))
+                    "--enable-tempstore=yes --enable-static=yes --with-crypto-lib=none"
                 else
                     "--with-tempstore=yes"
-                it.setToolsProperties(ext.toolsExt, tempStr)
+                )
+                it.setToolsProperties(ext.toolsExt)
                 it.setup(
                     srcDir.resolve(buildType.name).resolve(sqlcipherDir),
                     opensslTask.includeDirectory.get().asFile,
@@ -148,7 +150,8 @@ class SqlCipherBuild(target: Project,
             srcDir: File,
             runner: Runner,
             buildType: BuildType,
-            execOperations: ExecOperations
+            execOperations: ExecOperations,
+            optionString: String
         ) {
             val amalgamation = SqlcipherExtension.amalgamation
             if (srcDir.resolve(amalgamation).exists()) return
@@ -158,7 +161,7 @@ class SqlCipherBuild(target: Project,
             val shFilename = BuilderTask.createPluginFile(srcDir, "sqlite-amalgamation.sh") {
                 """
             #!/bin/sh
-            ./configure $buildOpt --enable-tempstore=yes --disable-tcl --with-crypto-lib=none
+            ./configure $buildOpt $optionString --disable-tcl
             make $amalgamation
             """.trimIndent()
             }

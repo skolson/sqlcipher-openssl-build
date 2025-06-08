@@ -5,10 +5,14 @@
 ### 0.5.0 2025-06
 - Gradle 8.14.1
 - Kotlin 2.1.21
-- om.gradle.plugin-publish 1.3.1
+- com.gradle.plugin-publish 1.3.1
+- org.eclipse.jgit:org.eclipse.jgit 7.3.0.202506031305-r
 - Fixed a deprecated usage of gradle Project exec function that would break in Gradle 9.0
 - Removed obsolete Idea classpath workaround from build.gradle.kts
 - Start using the SqlCipher configure option --with-tempstore=yes instead of --enable-tempstore=yes on versions 4.7.0 and later
+- Stop using deleted configure option --enable-static=yes on versions 4.7.0 and later
+- Stop using deleted configure option --with-crypto-lib=none on versions 4.7.0 and later
+- add new required compile options -DSQLITE_EXTRA_INIT=sqlcipher_extra_init and -DSQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown. Shouldn't impact builds of older versions before these were added
 
 ### 0.4.0 2024-03
 
@@ -18,7 +22,7 @@
 - org.eclipse.jgit:org.eclipse.jgit 6.9.0.202403050737-r
 - Add support for Macos arm64 architecture to both openssl and sqlcipher builds
 - Plugin test script now updated to OpenSSL 3.2.1 and SqlCipher 4.5.6
-- NOTE: macosArm64 target builds with no errors, but bild has not beenm tested on Apple Mac M1 hardware.
+- NOTE: macosArm64 target builds with no errors, but build has not been tested on Apple Mac M1 hardware.
 
 ### 0.3.5 2023-08
 

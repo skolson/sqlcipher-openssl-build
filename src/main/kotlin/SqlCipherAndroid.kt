@@ -13,8 +13,9 @@ class SqlCipherAndroid(
         private val srcDir: File,
         private val buildType: BuildType,
         androidMinimumSdk: Int,
-        private val execOperations: ExecOperations)
-{
+        private val execOperations: ExecOperations,
+        private val tempOptionString: String
+) {
     private val host get() = HostOs.query()
     private val sqlite3 = SqlcipherExtension.moduleName
     var outputDir = srcDir
@@ -62,7 +63,8 @@ class SqlCipherAndroid(
             srcDir,
             runner,
             buildType,
-            execOperations
+            execOperations,
+            tempOptionString
         )
         val cFlags = StringBuilder()
         requiredCFlags.forEach { cFlags.append("$it ") }
