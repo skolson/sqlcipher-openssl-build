@@ -13,6 +13,7 @@
 - Stop using deleted configure option --enable-static=yes on versions 4.7.0 and later
 - Stop using deleted configure option --with-crypto-lib=none on versions 4.7.0 and later
 - add new required compile options -DSQLITE_EXTRA_INIT=sqlcipher_extra_init and -DSQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown. Shouldn't impact builds of older versions before these were added
+- NOTE: SqlCipher changed the name of the libraries built by the make process from libsqlcipher to libsqlite3. So any .def files looking for libsqlcipher.a need to be changed to libsqlite3.a
 
 ### 0.4.0 2024-03
 

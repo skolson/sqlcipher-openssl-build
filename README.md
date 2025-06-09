@@ -9,15 +9,15 @@ At a high level, this is current status and near-term plans for the plugin. See 
 - Windows builds
     - Visual Studio 2019 Community Edition
     - Mingw64 using MSYS2 and a variety of installed MSYS2 packages
-    - Android 64 bit (androidArm64, androidX64) builds using NDK 21.3.6528147 (r20b) 
-    - Android 64 bit (androidArm64, androidX64) builds using NDK 22.1.7171670 (r21b)
+    - Android 64 bit (androidArm64, androidX64) builds using NDK  
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 
     - Openssl 1.1.k and earlier has an issue with android NDK r22 and later. See [OpenSSL GitHub pull 13694](https://github.com/openssl/openssl/pull/13694). 3.0.0 beta has the required fix. So to use the newer NDK versions, use 3.0 or later of openssl. The fix is also backported and merged, so should be available in 1.1.1l or later. 
-    - Android 64 bit (androidArm64, androidX64) builds using NDK 23.0.7599858 (r23)
-    - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2)
-- Linux builds on Ubuntu
-    - linuxX64 using gcc toolchain
-    - Android 64 bit (androidArm64, androidX64) builds using NDK 21.3.6528147 (r20b)
-    - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2)
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 
+- Linux builds
+    - linuxX64 using gcc toolchain, perl
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 
+    - Android 64 bit (androidArm64, androidX64) builds using NDK 
 - MacOS builds
     - ios64
     - iosArm64
@@ -26,6 +26,10 @@ At a high level, this is current status and near-term plans for the plugin. See 
     - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2) or later
 - Published in the Gradle plugin repository under name `sqlcipher-openssl-build` 
 - Android configuration - easy add of extra source files (JNI wrappers) to standard library
+
+#### Working example usage 
+
+For a fully functioning example using this plugin for android, apple, linux and windows builds, see the GitHub repo [KmpSqlencrypt KMP library for SqlCipher](https://github.com/skolson/KmpSqlencrypt)
 
 #### Tested Version Combinations
 The plugin successfully performs 64 bit builds of these combinations.  Other unlisted combinations also work. Note that the Sqlite version is listed only for information, it is determined by the SqlCipher version.
@@ -43,7 +47,9 @@ The plugin successfully performs 64 bit builds of these combinations.  Other unl
 | 3.0.3           | 4.5.1             | 3.37.2         |
 | 3.1.2           | 4.5.4             | 3.41.2         |
 | 3.2.1           | 4.5.6             | 3.44.2         |
-| 3.5.0           | 4.9.0             | 3.49.2         |  
+| 3.5.0           | 4.9.0*            | 3.49.2         |  
+
+NOTE: SqlCipher 4.9.0 builds produce the same libraries but under new names. The old make artifacts libsqlcipher.so and libsqlcipher.a are now libsqlite3.so and libsqlite3.a. So any CInterop usage will need a change to the .def file to look for the new name in each target.  
 
 ## OpenSSL
 *From the OpenSSL site:*
@@ -118,9 +124,12 @@ Windows support is included for three tool chains, each with its own requirement
     - Android Studio 4.0 or later, use SDK manager to install current versions:
         - NDK (side-by-side) version r20b through r24 rc2 tested
         - CMake 3.18.1 (default with newer NDKs)
+- LinuxX64 
+  - requires gcc and perl  
+  - build process works on Ubuntu 24.04.2, has not been tested on other distros.  There are no known specific requirements for Ubuntu, other distros that have perl and gcc have a shot to work :-).
 
 Mac OS support        
-- OpenSSL 3 build issues warning "Cannot find WWW::Curl::Easy" in podpath", but still seems to work
+- OpenSSL 3.x build sometimes issues warning "Cannot find WWW::Curl::Easy" in podpath", but still seems to work. This warning no longer happens on 3.5.0
 - all Apple builds use the standard SDK path structure and the default links for each platform, so the SDK version used is determined by the SDK install. Explicit configuration of an older installed SDK is not supported (but would be an easy pull request if desired).
 - both kotlin targets macosX64 and macosArm64 are supported.
 
