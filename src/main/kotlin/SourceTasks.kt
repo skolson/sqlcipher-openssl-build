@@ -1,6 +1,7 @@
 package com.oldguy.gradle
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -80,7 +81,8 @@ abstract class DownloadArchiveTask @Inject constructor(): DefaultTask() {
 /**
  * Perform an extract all operation from the input archive file
  */
-abstract class ExtractArchiveTask @Inject constructor(): DefaultTask() {
+abstract class ExtractArchiveTask(private val project: Project)
+    : DefaultTask() {
 
     init {
         description = "Extractable all of an archive to a specified source directory"

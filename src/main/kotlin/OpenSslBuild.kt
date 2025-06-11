@@ -7,11 +7,13 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.process.ExecOperations
+import javax.inject.Inject
 
 /**
  * Isolates the gradle input and output properties for OpenSSL tasks
  */
-abstract class OpenSslExtractTask: ExtractArchiveTask() {
+abstract class OpenSslExtractTask@Inject constructor(private val project: Project)
+    : ExtractArchiveTask(project) {
     @get:InputFile
     abstract override val archiveFile: RegularFileProperty
     @get:OutputDirectory

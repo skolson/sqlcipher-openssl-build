@@ -8,11 +8,14 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.process.ExecOperations
 import java.io.File
+import javax.inject.Inject
 
 /**
  * Isolates the gradle input and output properties for SqlCipher tasks
  */
-abstract class SqlCipherExtractTask: ExtractArchiveTask() {
+abstract class SqlCipherExtractTask
+    @Inject constructor(private val project: Project)
+    :ExtractArchiveTask(project) {
     @get:InputFile
     abstract override val archiveFile: RegularFileProperty
     @get:OutputDirectory
@@ -108,7 +111,7 @@ class SqlCipherBuild(target: Project,
                 // later is true
                 val tokens = ext.version.split(".").map { it.trim().toInt() }
                 val version470orLater = !(tokens[0] < 4 || (tokens[0] == 4 && tokens[1] < 7))
-                Logger.logger.log(LogLevel.WARN, "SqlCipher Version ${ext.version} Detected, 4.7.0 or later: $version470orLater")
+                Logger.logger.log(LogLevel.INFO, "SqlCipher Version ${ext.version} Detected, 4.7.0 or later: $version470orLater")
                 it.setOptions(version470orLater)
 
                 val opensslTask = target.tasks.getByName(opensslTaskName) as OpensslBuildTask

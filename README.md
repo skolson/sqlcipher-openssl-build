@@ -29,7 +29,9 @@ At a high level, this is current status and near-term plans for the plugin. See 
 
 #### Working example usage 
 
-For a fully functioning example using this plugin for android, apple, linux and windows builds, see the GitHub repo [KmpSqlencrypt KMP library for SqlCipher](https://github.com/skolson/KmpSqlencrypt)
+For a fully functioning example using this plugin for android, apple, linux and windows builds, see the GitHub repo [KmpSqlencrypt KMP library for SqlCipher](https://github.com/skolson/KmpSqlencrypt). The apple and linux builds are native using cinterop in this repo, so it has examples of correct .def files and gradle setup for cinterop usage.
+
+**Note:** In another 4.7.0 and later change, the cinterop .def file had to change on linuxX64 builds to explicitly reference libc.a, as the default libc.so is missing a couple of required symbols (fcntl64 and __isoc23_strtol) that are not resolved in libc.so on Ubuntu 24.04 and ldd version 39. See the above repo for an example.
 
 #### Tested Version Combinations
 The plugin successfully performs 64 bit builds of these combinations.  Other unlisted combinations also work. Note that the Sqlite version is listed only for information, it is determined by the SqlCipher version.
