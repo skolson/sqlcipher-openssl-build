@@ -50,7 +50,10 @@ abstract class SqlcipherBuildTask @Inject constructor(
     private val moduleNameH = SqlcipherExtension.moduleNameH
     private var targetsCopyTo: ((buildType: BuildType) -> File?)? = null
     private var copyCinteropIncludes:Boolean = false
-    private var optionString = "--with-tempstore=yes --enable-static=yes"
+    private var optionString = "-enable-tempstore=yes --enable-static=yes --with-crypto-lib=none"
+    private val version470Options = "--with-tempstore=yes"
+    private var linkerOptions = "-lcrypto -lm"
+    private val version470LinkerOptions = "-ldl -lpthread"
 
     override fun setToolsProperties(
         tools: ToolsExtension
@@ -59,8 +62,11 @@ abstract class SqlcipherBuildTask @Inject constructor(
         iosConfig = tools.apple
     }
 
-    fun setOptionString(newOptionString: String) {
-        optionString = newOptionString
+    fun setOptions(version470OrLater: Boolean) {
+        if (version470OrLater) {
+            optionString = version470Options
+            linkerOptions = "$linkerOptions $version470LinkerOptions"
+        }
     }
 
     init {
@@ -177,7 +183,7 @@ abstract class SqlcipherBuildTask @Inject constructor(
                             opensslLib: String,
                             buildOption: String = "") {
         // Note the -lm for the linux math library, not needed in mingw64. Without this when -DSQLITE_ENABLE_FTS5 specified, link error occurs
-        val ldflags = "LDFLAGS=\"-L$opensslLib -lcrypto -lm\""
+        val ldflags = "LDFLAGS=\"-L$opensslLib $linkerOptions\""
         val cmdLine = "./configure $buildOption $optionString --disable-tcl " +
                 "$ldflags " +
                 "CFLAGS=\"$compilerOptionsString -I$opensslInclude\""

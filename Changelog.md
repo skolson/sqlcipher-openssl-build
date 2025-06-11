@@ -2,6 +2,10 @@
 
 ###Version history
 
+### 0.5.1 2025-06
+- These changes are fixes to the new 4.7.0 and later support in 0.5.0
+- Linux builds of 4.7.0 and later now require libdl and libpthread during linking. So added linker options -ldl and -lpthread.
+
 ### 0.5.0 2025-06
 - Gradle 8.14.1
 - Kotlin 2.1.21

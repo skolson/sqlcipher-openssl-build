@@ -8,7 +8,9 @@ plugins {
 
 val groupName = "com.oldguy.gradle"
 val artifactName = "sqlcipher-openssl-build"
-val versionString = "0.5.0"
+val versionString = "0.5.1"
+val jgitVersion = "7.3.0.202506031305-r"
+
 group = groupName
 version = versionString
 
@@ -26,7 +28,7 @@ java {
 }
 
 dependencies {
-    implementation("org.eclipse.jgit:org.eclipse.jgit:7.3.0.202506031305-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:$jgitVersion")
     testImplementation(kotlin("test"))
 }
 

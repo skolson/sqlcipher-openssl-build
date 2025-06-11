@@ -3,6 +3,7 @@ package com.oldguy.gradle
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.process.ExecOperations
@@ -101,6 +102,15 @@ class SqlCipherBuild(target: Project,
         target.tasks.register("${buildName}Build$buildType", SqlcipherBuildTask::class.java, buildType)
             .configure {
                 ext.validateOptions()
+
+                // Various significant changes started with 4.7.0, including different command line options, new required compile
+                // options, and change of make targets libsqlcipher to libsqlite3. Use this boolean to determine if 4.7.0 or
+                // later is true
+                val tokens = ext.version.split(".").map { it.trim().toInt() }
+                val version470orLater = !(tokens[0] < 4 || (tokens[0] == 4 && tokens[1] < 7))
+                Logger.logger.log(LogLevel.WARN, "SqlCipher Version ${ext.version} Detected, 4.7.0 or later: $version470orLater")
+                it.setOptions(version470orLater)
+
                 val opensslTask = target.tasks.getByName(opensslTaskName) as OpensslBuildTask
                 val prereqName = if (useGit)
                     fullCopyTaskName
@@ -110,14 +120,6 @@ class SqlCipherBuild(target: Project,
                 it.onlyIf {
                     taskOk(builds, buildType) && ext.buildSqlCipher
                 }
-                // configure option changed with version 4.7.0 and later
-                val tokens = ext.version.split(".").map { it.trim().toInt() }
-                it.setOptionString(
-                    if (tokens[0] < 4 || (tokens[0] == 4 && tokens[1] < 7))
-                    "--enable-tempstore=yes --enable-static=yes --with-crypto-lib=none"
-                else
-                    "--with-tempstore=yes"
-                )
                 it.setToolsProperties(ext.toolsExt)
                 it.setup(
                     srcDir.resolve(buildType.name).resolve(sqlcipherDir),
