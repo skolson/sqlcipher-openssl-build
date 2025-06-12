@@ -264,6 +264,7 @@ open class SqlcipherExtension {
 
         val appleCompilerOptions = listOf(
             "-fno-common",
+            "-DSQLITE_TEMP_STORE=3",
             "-DSQLITE_ENABLE_API_ARMOR",
             "-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT",
             "-DSQLITE_OMIT_AUTORESET",
@@ -284,7 +285,6 @@ open class SqlcipherExtension {
         val iosCompilerOptions = appleCompilerOptions + listOf(
             "-DSQLITE_MAX_MMAP_SIZE=0",
             "-DSQLITE_ENABLE_LOCKING_STYLE=0",
-            "-DSQLITE_TEMP_STORE=3",
             "-fembed-bitcode",
             "-Wno-#warnings"
         )
