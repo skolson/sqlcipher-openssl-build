@@ -40,7 +40,6 @@ enum class BuildType {
      * Tested on Ubuntu Linux, should work on many others.
      */
     linuxX64,
-    linuxArm64,
 
     /**
      * IOS Simulator, MacOS hosts only
@@ -75,7 +74,12 @@ enum class BuildType {
     /**
      * Windows 10 or later Visual Studio Community Edition 2019 toolchain for Intel/AMD 64 bit windows hosts only.
      */
-    vStudio64;
+    vStudio64,
+    /**
+     * Tested on Ubuntu Linux, should work on many others.
+     */
+    linuxArm64,
+    ;
 
     val host = HostOs.query()
     val isAndroid = ordinal == 6 || ordinal == 7
@@ -83,7 +87,7 @@ enum class BuildType {
     val isMacOs = isIos || isAndroid || ordinal == 4 || ordinal == 5
     val isWindowsOnly = when (ordinal) { 0, 8 -> true else -> false }
     val isWindows = isWindowsOnly || isAndroid
-    val isLinux = isAndroid || ordinal == 1
+    val isLinux = isAndroid || ordinal == 1 || ordinal == 9
     val isThisHost = when (host) {
         HostOs.LINUX -> isLinux
         HostOs.WINDOWS -> isWindows

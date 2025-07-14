@@ -25,7 +25,7 @@ internal class PluginBuildTest {
     import com.oldguy.gradle.BuildType
 
     plugins {
-        id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.5.0"
+        id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.5.2"
     }
    
 
@@ -42,10 +42,10 @@ internal class PluginBuildTest {
             BuildType.macosArm64 to SqlcipherExtension.macOsCompilerOptions
         )
 
-        //builds("vStudio64", "androidX64", "androidArm64", "mingwX64", "linuxX64")
+        //builds("vStudio64", "androidX64", "androidArm64", "mingwX64", "linuxX64", "linuxArm64")
         //builds("androidX64", "androidArm64")
         //builds(BuildType.appleBuildTypes) 
-        builds("linuxX64")
+        builds("linuxArm64")
         
         val androidMainDirectory = projectDir.resolve("src").resolve("androidMain")
         val nativeInterop = projectDir.resolve("src/nativeInterop")
@@ -82,7 +82,7 @@ internal class PluginBuildTest {
             }
         }
         openssl {
-            tagName = "openssl-3.5.0"
+            tagName = "openssl-3.5.1"
             useGit = false
             configureOptions = OpensslExtension.smallConfigureOptions
             buildSpecificOptions = OpensslExtension.buildOptionsMap
