@@ -40,6 +40,7 @@ enum class BuildType {
      * Tested on Ubuntu Linux, should work on many others.
      */
     linuxX64,
+    linuxArm64,
 
     /**
      * IOS Simulator, MacOS hosts only
@@ -551,6 +552,7 @@ open class OpensslExtension {
             BuildType.androidArm64 to androidOptions,
             BuildType.androidX64 to androidOptions,
             BuildType.linuxX64 to iosConfigureOptions,
+            BuildType.linuxArm64 to iosConfigureOptions,
             BuildType.iosArm64 to iosConfigureOptions,
             BuildType.iosX64 to iosConfigureOptions,
             BuildType.macosX64 to iosConfigureOptions,

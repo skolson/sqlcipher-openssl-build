@@ -140,7 +140,8 @@ class OpenSslBuild(
                     BuildType.androidX64 -> {
                         android.determineNdkVersion()
                     }
-                    BuildType.linuxX64 -> {
+                    BuildType.linuxX64,
+                    BuildType.linuxArm64 -> {
                     }
                     BuildType.macosX64,
                     BuildType.macosArm64,

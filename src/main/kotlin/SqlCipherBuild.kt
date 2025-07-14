@@ -145,7 +145,8 @@ class SqlCipherBuild(target: Project,
          */
         private val buildsMap = mapOf(
             BuildType.androidArm64 to "aarch64-linux",
-            BuildType.androidX64 to "x86_64-linux"
+            BuildType.androidX64 to "x86_64-linux",
+            BuildType.linuxArm64 to "aarch64-linux-gnu"
         )
         /**
          * This builds the amalgamation sqlite3.c and sqlite3.h from the SqlCipher source, if sqlite3.c already exists in

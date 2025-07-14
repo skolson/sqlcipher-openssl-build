@@ -66,6 +66,10 @@ abstract class OpensslBuildTask @Inject constructor(
                 linuxScript(buildSrcDir, "mingw64", windows.mingwBinPath)
                 mingwPatterns
             }
+            BuildType.linuxArm64 -> {
+                linuxScript(buildSrcDir, "linux-aarch64")
+                linuxPatterns
+            }
             BuildType.linuxX64 -> {
                 linuxScript(buildSrcDir, "linux-x86_64")
                 linuxPatterns

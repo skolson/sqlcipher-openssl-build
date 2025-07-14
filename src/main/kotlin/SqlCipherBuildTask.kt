@@ -113,7 +113,9 @@ abstract class SqlcipherBuildTask @Inject constructor(
                     Runner.getMsysPath(i),
                     Runner.getMsysPath(lib),
                     "--build=mingw64")
+
             BuildType.linuxX64 -> linuxScript(s, t, i.absolutePath, lib.absolutePath)
+            BuildType.linuxArm64 -> linuxScript(s, t, i.absolutePath, lib.absolutePath, "--build=aarch64-linux-gnu")
             BuildType.androidX64,
             BuildType.androidArm64 -> androidBuild(buildType, s, t, i, lib)
             BuildType.macosX64,
