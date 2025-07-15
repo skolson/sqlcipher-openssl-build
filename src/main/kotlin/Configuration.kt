@@ -118,7 +118,7 @@ enum class BuildType {
         /**
          * Convenience value for build scripts that want to limit builds by host
          */
-        val linuxBuildTypes = entries.filter { it.isLinux }
+        val linuxBuildTypes = entries.filter { it.isLinux || it.isAndroid}
     }
 }
 

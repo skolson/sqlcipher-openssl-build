@@ -45,7 +45,7 @@ internal class PluginBuildTest {
         //builds("vStudio64", "androidX64", "androidArm64", "mingwX64", "linuxX64", "linuxArm64")
         //builds("androidX64", "androidArm64")
         //builds(BuildType.appleBuildTypes) 
-        builds("linuxArm64")
+        builds("BuildType.linuxBuildTypes")
         
         val androidMainDirectory = projectDir.resolve("src").resolve("androidMain")
         val nativeInterop = projectDir.resolve("src/nativeInterop")

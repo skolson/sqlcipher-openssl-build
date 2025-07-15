@@ -2,9 +2,10 @@
 
 ###Version history
 
-### 0.5.2 2025-07
+### 0.5.2 2025-07 
 
-- linuxArm64 support
+- linuxArm64 support for building openssl and sqlcipher. Tested on Ubuntu 24.04.2
+- Gradle 8.14.3
 
 ### 0.5.1 2025-06
 - These changes are fixes to the new 4.7.0 and later support in 0.5.0
