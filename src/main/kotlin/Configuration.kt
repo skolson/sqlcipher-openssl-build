@@ -79,11 +79,16 @@ enum class BuildType {
      * Tested on Ubuntu Linux, should work on many others.
      */
     linuxArm64,
+
+    /**
+     * IOS for ARM 64-bit simulator, MacOS on Apple silicon
+     */
+    iosSimulatorArm64
     ;
 
     val host = HostOs.query()
     val isAndroid = ordinal == 6 || ordinal == 7
-    val isIos = ordinal == 2 || ordinal == 3
+    val isIos = ordinal == 2 || ordinal == 3 || ordinal == 10
     val isMacOs = isIos || isAndroid || ordinal == 4 || ordinal == 5
     val isWindowsOnly = when (ordinal) { 0, 8 -> true else -> false }
     val isWindows = isWindowsOnly || isAndroid
@@ -466,28 +471,33 @@ open class AndroidToolExtension {
 }
 
 open class AppleToolExtension {
+    /**
+     * Default root location for Apple SDKs.
+     * See output from xcrun --sdk iphonesimulator --show-sdk-path
+     */
     var platformsLocation = "/Applications/Xcode.app/Contents/Developer"
     var sdkVersion = "15"
     var sdkVersionMinimum = "14"
     var platforms = mapOf(
         BuildType.iosX64 to "iPhoneSimulator",
+        BuildType.iosSimulatorArm64 to "iPhoneSimulator",
         BuildType.iosArm64 to "iPhoneOS",
         BuildType.macosArm64 to "MacOSX",
         BuildType.macosX64 to "MacOSX"
     )
 
-    private fun platform(buildType: BuildType): String {
+    fun platform(buildType: BuildType): String {
         if (!buildType.isMacOs)
             throw GradleException("Bug: only invoke for MacOS build types. buildType: $buildType")
         return platforms[buildType]
-            ?: throw GradleException("Bug: invalid IOS buildType: $buildType")
+            ?: throw GradleException("Bug: invalid Apple buildType: $buildType")
     }
 
-    private fun crossPath(buildType: BuildType): String {
+    fun crossPath(buildType: BuildType): String {
         return "$platformsLocation/Platforms/${platform(buildType)}.platform/Developer"
     }
 
-    val toolChainPath: String get() = "$platformsLocation/Toolchains/XcodeDefault.xctoolchain/usr/bin"
+    val toolChainPath: String get() = "$platformsLocation/Toolchains/XcodeDefault.xctoolchain/usr/bin/"
 
     /**
      * for the specified build type, return a list of compiler options required - not configurable. All Apple
@@ -495,11 +505,19 @@ open class AppleToolExtension {
      * minimum version of the SDK.
      */
     fun options(buildType: BuildType): List<String> {
-        val all = listOf("-isysroot ${crossPath(buildType)}/SDKs/${platform(buildType)}.sdk")
-        return if (buildType == BuildType.macosX64 || buildType == BuildType.macosArm64)
-            all
-        else
-            all + listOf("-miphoneos-version-min=$sdkVersionMinimum")
+        val platform = "-isysroot ${crossPath(buildType)}/SDKs/${platform(buildType)}.sdk"
+        return when(buildType) {
+            BuildType.iosSimulatorArm64,
+            BuildType.iosX64 ->
+                listOf(platform, "-mios-simulator-version-min=$sdkVersionMinimum")
+            BuildType.macosArm64,
+            BuildType.macosX64 ->
+                listOf(platform)
+            BuildType.iosArm64 ->
+                listOf(platform, "-miphoneos-version-min=$sdkVersionMinimum")
+            else ->
+                throw GradleException("Bug: invalid Apple buildType: $buildType")
+        }
     }
 
     fun optionsString(buildType: BuildType): String {

@@ -85,7 +85,8 @@ abstract class OpensslBuildTask @Inject constructor(
                 applePatterns + "*.dylib"
             }
             BuildType.iosX64,
-            BuildType.iosArm64 -> {
+            BuildType.iosArm64,
+            BuildType.iosSimulatorArm64 -> {
                 iosScript(buildSrcDir, buildType)
                 applePatterns
             }
@@ -165,7 +166,7 @@ abstract class OpensslBuildTask @Inject constructor(
     }
 
     /**
-     * Use this for IOS builds
+     * Use this for IOS builds. See Configurations/15-ios.conf
      */
     private fun iosScript(srcDir: File, buildType: BuildType, path: String = "") {
         val arch = iosTargets[buildType]
@@ -173,7 +174,9 @@ abstract class OpensslBuildTask @Inject constructor(
             """
             #!/bin/zsh    
             export CC=clang;
-            export PATH="${config.toolChainPath}:${'$'}PATH"
+            export CROSS_COMPILE="${config.toolChainPath}"
+            export CROSS_SDK=${config.platform(buildType)}.sdk
+            export CROSS_TOP=${config.crossPath(buildType)}
             ./Configure $arch $configureOptionsString ${config.optionsString(buildType)}
             $make all
             """.trimIndent()
@@ -191,6 +194,7 @@ abstract class OpensslBuildTask @Inject constructor(
         val androidTargets = listOf("android-arm64", "android64-x86_64")
         val iosTargets = mapOf(
             BuildType.iosX64 to "iossimulator-xcrun",
+            BuildType.iosSimulatorArm64 to "iossimulator-arm64-xcrun",
             BuildType.iosArm64 to "ios64-cross"
         )
         // use ./Configure LIST to find these

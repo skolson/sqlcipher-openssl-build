@@ -2,6 +2,14 @@
 
 ###Version history
 
+### 0.5.3 2025-08
+
+- iosSimulatorArm64 support
+  - openssl ios build script now uses openssl-specific exports to support cross-compiles for simulators; i.e. Arm64 simulator targets built on X64 Mac
+  - sqlcipher now builds for iosSimulatorArm64
+- ios build test now using sdk 18
+- Kotlin 2.2.0
+
 ### 0.5.2 2025-07
 
 - linuxArm64 support

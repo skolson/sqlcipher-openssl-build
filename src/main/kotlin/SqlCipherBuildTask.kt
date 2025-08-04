@@ -121,7 +121,8 @@ abstract class SqlcipherBuildTask @Inject constructor(
             BuildType.macosX64,
             BuildType.macosArm64,
             BuildType.iosArm64,
-            BuildType.iosX64 -> appleBuild(buildType, s, t, i)
+            BuildType.iosX64,
+            BuildType.iosSimulatorArm64 -> appleBuild(buildType, s, t, i)
         }
         targetsCopyTo?.invoke(buildType)?.let { targetDir ->
             runner.copyResults(t, targetDir)

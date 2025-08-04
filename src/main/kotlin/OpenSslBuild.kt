@@ -146,7 +146,8 @@ class OpenSslBuild(
                     BuildType.macosX64,
                     BuildType.macosArm64,
                     BuildType.iosArm64,
-                    BuildType.iosX64 -> {
+                    BuildType.iosX64,
+                    BuildType.iosSimulatorArm64-> {
                     }
                 }
             }

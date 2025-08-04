@@ -19,8 +19,9 @@ At a high level, this is current status and near-term plans for the plugin. See 
     - Android 64 bit (androidArm64, androidX64) builds using NDK 
     - Android 64 bit (androidArm64, androidX64) builds using NDK 
 - MacOS builds
-    - ios64
+    - iosX64 (simulator)
     - iosArm64
+    - iosSimulatorArm64
     - macX64 - mac on intel
     - macArm64 - mac on M1 or other 64-bit Arm chip
     - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2) or later
@@ -49,7 +50,7 @@ The plugin successfully performs 64 bit builds of these combinations.  Other unl
 | 3.0.3           | 4.5.1             | 3.37.2         |
 | 3.1.2           | 4.5.4             | 3.41.2         |
 | 3.2.1           | 4.5.6             | 3.44.2         |
-| 3.5.0           | 4.9.0*            | 3.49.2         |  
+| 3.5.1           | 4.9.0*            | 3.49.2         |  
 
 NOTE: SqlCipher 4.9.0 builds produce the same libraries but under new names. The old make artifacts libsqlcipher.so and libsqlcipher.a are now libsqlite3.so and libsqlite3.a. So any CInterop usage will need a change to the .def file to look for the new name in each target.  
 
@@ -137,7 +138,7 @@ Mac OS support
 
 IOS support
 - Xcode 13.x or later standard install used
-- In the current plugin only iPhoneOS 64 bit, and iosSimulator build types are supported. 
+- iPhoneOS 64 bit, iosX64 (simulator) and iosSimulatorArm64 build types are supported. 
 
 ## Features
 - Current support is for 64-bit builds only on all platforms.
@@ -191,12 +192,13 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
     sqlcipher {
         useGit = false
-        version = "4.5.6"
+        version = "4.9.0"
         compilerOptions = SqlcipherExtension.defaultCompilerOptions
         buildCompilerOptions = mapOf(
             BuildType.androidX64 to SqlcipherExtension.androidCompilerOptions, 
             BuildType.androidArm64 to SqlcipherExtension.androidCompilerOptions, 
             BuildType.iosX64 to SqlcipherExtension.iosCompilerOptions, 
+            BuildType.iosSimulatorArm64 to SqlcipherExtension.iosCompilerOptions,
             BuildType.iosArm64 to SqlcipherExtension.iosCompilerOptions, 
             BuildType.macosX64 to SqlcipherExtension.macOsCompilerOptions,
             BuildType.macosArm64 to SqlcipherExtension.macOsCompilerOptions
@@ -241,12 +243,13 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
                 minimumSdk = 26
             }
             apple {
-                sdkVersion = "15"
+                platformsLocation = "/Applications/Xcode.app/Contents/Developer"
+                sdkVersion = "18"
                 sdkVersionMinimum = "14"
             }
         }
         openssl {
-            tagName = "openssl-3.2.1"
+            tagName = "openssl-3.5.1"
             useGit = false
             configureOptions = OpensslExtension.smallConfigureOptions
             buildSpecificOptions = OpensslExtension.buildOptionsMap

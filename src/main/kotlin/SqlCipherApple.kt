@@ -33,7 +33,8 @@ class SqlCipherApple(
          * compile amalgamation file using SDK for the build type, make library with libtool
          */
         val options = buildString {
-            if (buildType == BuildType.iosArm64) append("-arch arm64 ")
+            if (buildType == BuildType.iosArm64 || buildType == BuildType.iosSimulatorArm64) append("-arch arm64 ")
+            if (buildType == BuildType.iosSimulatorArm64) append("-mios-simulator-version-min=${config.sdkVersionMinimum} ")
             if (buildType == BuildType.macosArm64) {
                 append("-arch arm64 -target arm64-apple-macos ")
             }

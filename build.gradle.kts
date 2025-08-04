@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.1.21"
+    kotlin("jvm") version "2.2.0"
     `java-gradle-plugin`
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.10"
     id("com.gradle.plugin-publish") version "1.3.1"
@@ -8,7 +8,7 @@ plugins {
 
 val groupName = "com.oldguy.gradle"
 val artifactName = "sqlcipher-openssl-build"
-val versionString = "0.5.2"
+val versionString = "0.5.3"
 val jgitVersion = "7.3.0.202506031305-r"
 
 group = groupName
