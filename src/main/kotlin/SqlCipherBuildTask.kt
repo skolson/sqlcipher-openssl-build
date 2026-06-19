@@ -51,7 +51,7 @@ abstract class SqlcipherBuildTask @Inject constructor(
     private var targetsCopyTo: ((buildType: BuildType) -> File?)? = null
     private var copyCinteropIncludes:Boolean = false
     private var optionString = "-enable-tempstore=yes --enable-static=yes --with-crypto-lib=none"
-    private val version470Options = "--with-tempstore=yes --disable-shared"
+    private val version470Options = "--disable-shared"
     private var linkerOptions = "-lcrypto -lm"
     private val version470LinkerOptions = "-ldl -lpthread"
 
@@ -62,9 +62,9 @@ abstract class SqlcipherBuildTask @Inject constructor(
         iosConfig = tools.apple
     }
 
-    fun setOptions(version470OrLater: Boolean) {
+    fun setOptions(version470OrLater: Boolean, tempStoreOption: String) {
         if (version470OrLater) {
-            optionString = version470Options
+            optionString = "$tempStoreOption $version470Options"
             linkerOptions = "$linkerOptions $version470LinkerOptions"
         }
     }

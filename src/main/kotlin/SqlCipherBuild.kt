@@ -112,7 +112,7 @@ class SqlCipherBuild(target: Project,
                 val tokens = ext.version.split(".").map { it.trim().toInt() }
                 val version470orLater = !(tokens[0] < 4 || (tokens[0] == 4 && tokens[1] < 7))
                 Logger.logger.log(LogLevel.DEBUG, "SqlCipher Version ${ext.version} Detected, 4.7.0 or later: $version470orLater")
-                it.setOptions(version470orLater)
+                it.setOptions(version470orLater, ext.tempStoreCompilerOption)
 
                 val opensslTask = target.tasks.getByName(opensslTaskName) as OpensslBuildTask
                 val prereqName = if (useGit)

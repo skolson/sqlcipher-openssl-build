@@ -146,6 +146,20 @@ open class SqlcipherExtension {
     val tagName get() = "v$version"
     var compilerOptions = defaultCompilerOptions
 
+    var withTempStore = "always"
+
+    val tempStoreCompilerOption: String get() {
+        val wrk = "--with-tempstore="
+        val v = when (withTempStore.lowercase()) {
+            "no" -> "0"
+            "file" -> "1"
+            "memory" -> "2"
+            "always" -> "3"
+            else -> throw GradleException("Invalid value for withTempStore: $withTempStore; no, file, memory, always")
+        }
+        return "$wrk$v"
+    }
+
     /**
      * Map of additional options to be passed to the C compiler, keyed by build type. Any found for a specific
      * build type will be added after the options specified in [compilerOptions]. Entries for an unsupported build type
@@ -262,7 +276,6 @@ open class SqlcipherExtension {
             "-DSQLITE_SOUNDEX",
             "-DHAVE_USLEEP=1",
             "-DSQLITE_MAX_VARIABLE_NUMBER=99999",
-            "-DSQLITE_TEMP_STORE=3",
             "-DSQLITE_DEFAULT_JOURNAL_SIZE_LIMIT=1048576",
             "-DSQLITE_ENABLE_MEMORY_MANAGEMENT=1",
             "-DSQLITE_ENABLE_UNLOCK_NOTIFY",
@@ -274,7 +287,6 @@ open class SqlcipherExtension {
 
         val appleCompilerOptions = listOf(
             "-fno-common",
-            "-DSQLITE_TEMP_STORE=3",
             "-DSQLITE_ENABLE_API_ARMOR",
             "-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT",
             "-DSQLITE_OMIT_AUTORESET",
@@ -563,10 +575,10 @@ open class OpensslExtension {
                 "no-asm",
                 "no-idea", "no-camellia",
                 "no-seed", "no-bf", "no-cast", "no-rc2", "no-rc4", "no-rc5", "no-md2",
-                "no-md4", "no-ecdh", "no-sock", "no-ssl3",
+                "no-md4", "no-ecdh", "no-sock",
                 "no-dsa", "no-dh", "no-ec", "no-ecdsa", "no-tls1",
                 "no-rfc3779", "no-whirlpool", "no-srp",
-                "no-mdc2", "no-ecdh", "no-engine", "no-srtp")
+                "no-mdc2", "no-ecdh", "no-srtp")
         val iosConfigureOptions = listOf(
             "no-dso", "no-async", "no-shared"
         )
