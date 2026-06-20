@@ -49,22 +49,3 @@ java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
-
-afterEvaluate {
-    publishing {
-        repositories {
-            maven {
-                name = "localRepo"
-                url = uri("https://localhost/MavenRepo")
-            }
-        }
-        publications {
-            create<MavenPublication>("sqlcipherPlugin") {
-                from(components["java"])
-                groupId    = groupName
-                artifactId = artifactName
-                version    = versionString
-            }
-        }
-    }
-}

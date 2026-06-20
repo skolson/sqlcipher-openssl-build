@@ -1,6 +1,5 @@
 package com.oldguy.gradle
 
-import com.oldguy.gradle.Logger.logger
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -12,7 +11,7 @@ import java.io.File
 import javax.inject.Inject
 
 /**
- * Isolates the gradle input and output properties for SqlCipher tasks
+ * Isolates the Gradle input and output properties for SqlCipher tasks
  */
 abstract class SqlCipherExtractTask
     @Inject constructor(private val project: Project)
@@ -126,7 +125,6 @@ class SqlCipherBuild(target: Project,
                 }
                 it.doFirst {
                     ext.targetsCopyTo?.invoke(buildType)?.let { targetDir ->
-                        logger.error("Deleting files from ${targetDir.absolutePath}")
                         target.delete(
                             target
                                 .fileTree(targetDir)

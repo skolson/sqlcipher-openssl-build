@@ -5,11 +5,10 @@
 ### 0.6.0
 - Kotlin 2.3.20 (max supported for Gradle 9.5.1 plugins)
 - Gradle 9.5.1
-- Gradle libs.versions.toml now in use
-- openssl retire two deprecated compile options; no-engine, no-ssl3
-- If linux targets are to be built on MacOs, do not skip. MacOs supports linux cross-compiles if environment is set up.
-- --with-tempstore=always is now default, no longer use -DSQLITE_TEMP_STORE as a command line option
-  - add new keyword to dsl withTempStore with three valid string values; yes, always (default). SqlCipher dos not support "no".
+- Gradle libs.versions.toml
+- openssl - retire two deprecated compile options; no-engine, no-ssl3
+- --with-tempstore=always is now default, no longer use -DSQLITE_TEMP_STORE as a command line option for Sqlite. SqlCipher still requires it. Plugin ensures the two specs match.
+  - add new keyword to dsl withTempStore with two valid string values; yes, always (default). SqlCipher does not support "no".
 - On MacOS permission issues sometimes prevent output files from the build being copied to their destination directories. Can happen on all targets. So plugin now does a delete task of files in each destination target directory before copying. Deletes;*.a, *.pc, *.so, *.h, sqlite3 (no suffix)
 - Gradle jvm toolchain in use.  Still using 21
 - Unit test source updated

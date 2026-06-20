@@ -44,7 +44,8 @@ internal class PluginBuildTest {
         )
 
         //builds("vStudio64", "androidX64", "androidArm64", "mingwX64", "linuxX64", "linuxArm64")
-        builds("androidX64", "androidArm64")
+        //builds("androidX64", "androidArm64")
+        builds("macosArm64")
         //builds(BuildType.appleBuildTypes) 
         //builds("iosSimulatorArm64")
         
@@ -95,12 +96,12 @@ internal class PluginBuildTest {
 
         val result = gradleRunner
             //.withArguments("sqlcipherBuildAll", "--stacktrace", "--warning-mode", "all")
-            //.withArguments("sqlcipherBuildmacosArm64", "--stacktrace", "--warning-mode", "all")
+            .withArguments("sqlcipherBuildmacosArm64", "--stacktrace", "--warning-mode", "all")
             //.withArguments("opensslBuildiosX64", "--stacktrace", "--info", "-Dorg.gradle.debug=true", "--warning-mode", "all")
             //.withArguments("opensslBuildmingw64", "--stacktrace")
             //.withArguments("sqlcipherBuildvStudio64", "--stacktrace", "-Dorg.gradle.debug=true")
             //.withArguments("sqlcipherBuildmingwX64", "--stacktrace")
-            .withArguments("sqlcipherBuildandroidArm64", "--stacktrace", "--warning-mode", "all")
+            //.withArguments("sqlcipherBuildandroidArm64", "--stacktrace", "--warning-mode", "all")
             //.withArguments("sqlcipherBuildandroidX64", "--stacktrace")
             //.withArguments("sqlcipherBuildAll", "--stacktrace", "--warning-mode", "all")
             .build()

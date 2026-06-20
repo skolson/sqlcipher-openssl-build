@@ -2,7 +2,7 @@
 
 GradleSqlCipher is a Gradle plugin that builds OpenSSL and Zetetic's SqlCipher libraries and related executables, supporting a variety of build environments. View this plugin as essentially an ease-of-use wrapper on top of the configuration scripts and make files both packages already supply.
 
-This plugin is very early in its lifecycle. There is **lots** of opportunity for more documentation, enhancements in flexibility, etc. Suggestions for documentation, bugs and enhancements are always welcome. Use this GitHub project's New Issue for these. 
+Suggestions for documentation, bugs and enhancements are always welcome. Use this GitHub project's New Issue for these. 
 
 At a high level, this is current status and near-term plans for the plugin. See below for details/
 - 64 bit builds only on all platforms. No current plans for 32 bit builds
@@ -24,7 +24,7 @@ At a high level, this is current status and near-term plans for the plugin. See 
     - iosSimulatorArm64
     - macX64 - mac on intel
     - macArm64 - mac on M1 or other 64-bit Arm chip
-    - Android 64 bit (androidArm64, androidX64) builds using NDK 24.0.7956693 (r24-rc2) or later
+    - Android 64 bit (androidArm64, androidX64) builds using NDK r29 or later
 - Published in the Gradle plugin repository under name `sqlcipher-openssl-build` 
 - Android configuration - easy add of extra source files (JNI wrappers) to standard library
 
@@ -38,21 +38,22 @@ For a fully functioning example using this plugin for android, apple, linux and 
 The plugin successfully performs 64 bit builds of these combinations.  Other unlisted combinations also work. Note that the Sqlite version is listed only for information, it is determined by the SqlCipher version.
 
 | OpenSSL version | SqlCipher version | Sqlite Version |
-|-----------------|-------------------|----------------|
-| 1.1.g           | 4.4.0             | 3.31.0         |
-| 1.1.h           | 4.4.0             | 3.31.0         |
-| 1.1.h           | 4.4.1             | 3.33.0         |
-| 1.1.h           | 4.4.2             | 3.33.0         |
-| 3.0.0 beta2     | 4.4.3             | 3.34.1         |
-| 3.0.0           | 4.5.0             | 3.36.0         |
-| 3.0.1           | 4.5.0             | 3.36.0         |
-| 3.0.1           | 4.5.1             | 3.37.2         |
-| 3.0.3           | 4.5.1             | 3.37.2         |
-| 3.1.2           | 4.5.4             | 3.41.2         |
-| 3.2.1           | 4.5.6             | 3.44.2         |
-| 3.5.1           | 4.9.0*            | 3.49.2         |  
+|-----------------|------------------|----------------|
+| 1.1.g           | 4.4.0            | 3.31.0         |
+| 1.1.h           | 4.4.0            | 3.31.0         |
+| 1.1.h           | 4.4.1            | 3.33.0         |
+| 1.1.h           | 4.4.2            | 3.33.0         |
+| 3.0.0 beta2     | 4.4.3            | 3.34.1         |
+| 3.0.0           | 4.5.0            | 3.36.0         |
+| 3.0.1           | 4.5.0            | 3.36.0         |
+| 3.0.1           | 4.5.1            | 3.37.2         |
+| 3.0.3           | 4.5.1            | 3.37.2         |
+| 3.1.2           | 4.5.4            | 3.41.2         |
+| 3.2.1           | 4.5.6            | 3.44.2         |
+| 3.5.1           | 4.9.0*           | 3.49.2         |  
+| 4.0.1           | 4.16.0*          | 3.53.1         |  
 
-NOTE: SqlCipher 4.9.0 builds produce the same libraries but under new names. The old make artifacts libsqlcipher.so and libsqlcipher.a are now libsqlite3.so and libsqlite3.a. So any CInterop usage will need a change to the .def file to look for the new name in each target.  
+NOTE: SqlCipher 4.9.0 builds produce the same libraries but under new names. The old make artifacts libsqlcipher.so and libsqlcipher.a are now libsqlite3.so and libsqlite3.a. So any CInterop usage will need a change to the .def file to look for the new name in each target.  Also 4.7.0 changed some build options, plugin adapts based on build.
 
 ## OpenSSL
 *From the OpenSSL site:*
@@ -125,8 +126,8 @@ Windows support is included for three tool chains, each with its own requirement
 - CLang is not currently supported but could be easily added if there is interest.
 - Android NDK
     - Android Studio 4.0 or later, use SDK manager to install current versions:
-        - NDK (side-by-side) version r20b through r24 rc2 tested
-        - CMake 3.18.1 (default with newer NDKs)
+        - NDK (side-by-side) version r20b through r29 tested
+        - CMake 4.1.2 (default with newer NDKs)
 - LinuxX64 
   - requires gcc and perl  
   - build process works on Ubuntu 24.04.2, has not been tested on other distros.  There are no known specific requirements for Ubuntu, other distros that have perl and gcc have a shot to work :-).
@@ -180,7 +181,7 @@ Use the plugins DSL in build.gradle.kts to declare enable the plugin:
 ```
     plugins {
             ...
-            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.4.0"
+            id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.6.0"
     }
 ```
 
@@ -192,7 +193,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
 
     sqlcipher {
         useGit = false
-        version = "4.9.0"
+        version = "4.16.0"
         compilerOptions = SqlcipherExtension.defaultCompilerOptions
         buildCompilerOptions = mapOf(
             BuildType.androidX64 to SqlcipherExtension.androidCompilerOptions, 
@@ -224,7 +225,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
                 project.projectDir.resolve("TestFiles/cinterop")
         }
         // set this to true to ensure above targetsToCopy logic also copies includes required
-        // by the kotlin cinterops tool to use with the built static library
+        // by the kotlin cinterops tool to use with the built library
         copyCinteropIncludes = true
        
         tools {
@@ -237,9 +238,9 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
             }
             android {
                 windowsSdkLocation = "D:\\Android\\sdk"
-                linuxSdkLocation = ""
-                macosSdkLocation = "/Users/username/Library/Android/sdk"
-                ndkVersion = "25.0.8221429"
+                linuxSdkLocation = ""       // change to SDK install location on linux host
+                macosSdkLocation = "/Users/username/Library/Android/sdk" // change to SDK install location on mac host
+                ndkVersion = "29.0.14206865"
                 minimumSdk = 26
             }
             apple {
@@ -249,7 +250,7 @@ The DSL to configure the plugin for a windows hosted build producing Visual Stud
             }
         }
         openssl {
-            tagName = "openssl-3.5.1"
+            tagName = "openssl-4.0.1"
             useGit = false
             configureOptions = OpensslExtension.smallConfigureOptions
             buildSpecificOptions = OpensslExtension.buildOptionsMap
@@ -457,7 +458,7 @@ The **SqlcipherExtension** class has static predefined defaults for the many Sql
 
 If these options are not used, SqlCipher build fails.    
 
-    `listOf("-DSQLITE_HAS_CODEC","-DSQLCIPHER_CRYPTO_OPENSSL")`
+    `listOf("-DSQLITE_HAS_CODEC","-DSQLCIPHER_CRYPTO_OPENSSL", "-DSQLITE_TEMP_STORE=3")`
 
 **defaultCompilerOptions**
 
@@ -493,7 +494,6 @@ These are defaults for Android builds
             "-DSQLITE_SOUNDEX",
             "-DHAVE_USLEEP=1",
             "-DSQLITE_MAX_VARIABLE_NUMBER=99999",
-            "-DSQLITE_TEMP_STORE=3",
             "-DSQLITE_DEFAULT_JOURNAL_SIZE_LIMIT=1048576",
             "-DSQLITE_ENABLE_MEMORY_MANAGEMENT=1",
             "-DSQLITE_ENABLE_UNLOCK_NOTIFY",
@@ -537,7 +537,6 @@ These are defaults for both IOS and the IOS Simulator on intel.
     listOf(
             "-DSQLITE_MAX_MMAP_SIZE=0",
             "-DSQLITE_ENABLE_LOCKING_STYLE=0",
-            "-DSQLITE_TEMP_STORE=3",
             "-Wno-#warnings"
     )
 
@@ -552,10 +551,10 @@ These are defaults for any platform build. See the Openssl documentation for all
     listOf(
         "no-asm", "no-idea", "no-camellia",
         "no-seed", "no-bf", "no-cast", "no-rc2", "no-rc4", "no-rc5", "no-md2",
-        "no-md4", "no-ecdh", "no-sock", "no-ssl3",
+        "no-md4", "no-ecdh", "no-sock", 
         "no-dsa", "no-dh", "no-ec", "no-ecdsa", "no-tls1",
         "no-rfc3779", "no-whirlpool", "no-srp",
-        "no-mdc2", "no-ecdh", "no-engine", "no-srtp"
+        "no-mdc2", "no-ecdh", "no-srtp"
     )
 
 **platform-specific Configure Options**

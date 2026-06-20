@@ -88,11 +88,11 @@ enum class BuildType {
 
     val host = HostOs.query()
     val isAndroid = ordinal == 6 || ordinal == 7
+    val isLinux = isAndroid || ordinal == 1 || ordinal == 9
     val isIos = ordinal == 2 || ordinal == 3 || ordinal == 10
     val isMacOs = isIos || isAndroid || ordinal == 4 || ordinal == 5
     val isWindowsOnly = when (ordinal) { 0, 8 -> true else -> false }
     val isWindows = isWindowsOnly || isAndroid
-    val isLinux = isAndroid || ordinal == 1 || ordinal == 9
     val isThisHost = when (host) {
         HostOs.LINUX -> isLinux
         HostOs.WINDOWS -> isWindows
