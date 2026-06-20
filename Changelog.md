@@ -2,7 +2,7 @@
 
 ###Version history
 
-### 0.6.0
+### 0.6.0 2026-06
 - Kotlin 2.3.20 (max supported for Gradle 9.5.1 plugins)
 - Gradle 9.5.1
 - Gradle libs.versions.toml
