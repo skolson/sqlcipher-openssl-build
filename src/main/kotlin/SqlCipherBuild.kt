@@ -1,5 +1,6 @@
 package com.oldguy.gradle
 
+import com.oldguy.gradle.Logger.logger
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -103,7 +104,7 @@ class SqlCipherBuild(target: Project,
         }
 
         target.tasks.register("${buildName}Build$buildType", SqlcipherBuildTask::class.java, buildType)
-            .configure {
+            .configure { it ->
                 ext.validateOptions()
 
                 // Various significant changes started with 4.7.0, including different command line options, new required compile
@@ -123,6 +124,20 @@ class SqlCipherBuild(target: Project,
                 it.onlyIf {
                     taskOk(builds, buildType) && ext.buildSqlCipher
                 }
+                it.doFirst {
+                    ext.targetsCopyTo?.invoke(buildType)?.let { targetDir ->
+                        logger.error("Deleting files from ${targetDir.absolutePath}")
+                        target.delete(
+                            target
+                                .fileTree(targetDir)
+                                .include("**/*.a")
+                                .include("**/*.pc")
+                                .include("**/*.so")
+                                .include("**/*.h")
+                                .include("**/sqlite3")
+                        )
+                    }
+                }
                 it.setToolsProperties(ext.toolsExt)
                 it.setup(
                     srcDir.resolve(buildType.name).resolve(sqlcipherDir),
@@ -131,7 +146,7 @@ class SqlCipherBuild(target: Project,
                     createTargetsDirectory(ext.targetsDirectory, buildName).resolve(buildType.name),
                     windows.sdkInstall,
                     windows.sdkLibVersion,
-                    ext.compilerOptions,
+                    listOf(ext.sqlcipherTempStoreOption) + ext.compilerOptions,
                     ext.buildCompilerOptions,
                     ext.targetsCopyTo,
                     ext.copyCinteropIncludes

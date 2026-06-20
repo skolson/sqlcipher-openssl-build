@@ -150,14 +150,24 @@ open class SqlcipherExtension {
 
     val tempStoreCompilerOption: String get() {
         val wrk = "--with-tempstore="
-        val v = when (withTempStore.lowercase()) {
-            "no" -> "0"
-            "file" -> "1"
-            "memory" -> "2"
-            "always" -> "3"
-            else -> throw GradleException("Invalid value for withTempStore: $withTempStore; no, file, memory, always")
+        val v = withTempStore.lowercase()
+        when (v) {
+            "yes",
+            "always" -> {}
+            else -> throw GradleException("Invalid value for withTempStore: $v; yes, always")
         }
         return "$wrk$v"
+    }
+
+    val sqlcipherTempStoreOption: String get() {
+        val wrk = "-DSQLITE_TEMP_STORE="
+        val v = withTempStore.lowercase()
+        val i = when (v) {
+            "yes" -> "2"
+            "always" -> "3"
+            else -> throw GradleException("Invalid value for withTempStore: $v; yes, always")
+        }
+        return "$wrk$i"
     }
 
     /**

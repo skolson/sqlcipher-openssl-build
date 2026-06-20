@@ -1,23 +1,23 @@
 package com.oldguy.gradle
 
-import org.gradle.internal.impldep.org.junit.rules.TemporaryFolder
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.CleanupMode
+import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Files
+import java.nio.file.Path
 
 internal class PluginBuildTest {
 
     @Test
-    fun basicTest() {
-        val testProjectDir = TemporaryFolder()
-        testProjectDir.create()
-        println("Text project path: ${testProjectDir.root.absolutePath}")
+    fun basicTest(@TempDir(cleanup = CleanupMode.NEVER) testProjectDir: Path) {
+        println("Test project path: ${testProjectDir.toAbsolutePath()}")
         val gradleRunner = GradleRunner.create()
                 .withPluginClasspath()
-                .withProjectDir(testProjectDir.root)
-                .withTestKitDir(testProjectDir.newFolder())
+                .withProjectDir(testProjectDir.toFile())
+                .withTestKitDir(testProjectDir.resolve("testkit").toFile())
 
-        // creates temp directory for a gradle project
-        val buildFile = testProjectDir.newFile("build.gradle.kts")
+        val buildFile = testProjectDir.resolve("build.gradle.kts")
 
         val ktsText = """
     import com.oldguy.gradle.OpensslExtension
@@ -25,13 +25,13 @@ internal class PluginBuildTest {
     import com.oldguy.gradle.BuildType
 
     plugins {
-        id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.5.3"
+        id("com.oldguy.gradle.sqlcipher-openssl-build") version "0.6.0"
     }
    
 
     sqlcipher {
         useGit = false
-        version = "4.9.0"
+        version = "4.16.0"
         compilerOptions = SqlcipherExtension.defaultCompilerOptions
         buildCompilerOptions = mapOf(
             BuildType.androidX64 to SqlcipherExtension.androidCompilerOptions, 
@@ -44,9 +44,9 @@ internal class PluginBuildTest {
         )
 
         //builds("vStudio64", "androidX64", "androidArm64", "mingwX64", "linuxX64", "linuxArm64")
-        //builds("androidX64", "androidArm64")
+        builds("androidX64", "androidArm64")
         //builds(BuildType.appleBuildTypes) 
-        builds("iosSimulatorArm64")
+        //builds("iosSimulatorArm64")
         
         val androidMainDirectory = projectDir.resolve("src").resolve("androidMain")
         val nativeInterop = projectDir.resolve("src/nativeInterop")
@@ -73,8 +73,8 @@ internal class PluginBuildTest {
             android {
                 windowsSdkLocation = "D:\\Android\\sdk"
                 linuxSdkLocation = "/home/steve/Android/Sdk"
-                macosSdkLocation = "/Users/steve/Library/Android/sdk"
-                ndkVersion = "25.2.9519653"
+                macosSdkLocation = "/Volumes/mnt/Library/Android"
+                ndkVersion = "29.0.14206865"
                 minimumSdk = 26
             }
             apple {
@@ -84,26 +84,26 @@ internal class PluginBuildTest {
             }
         }
         openssl {
-            tagName = "openssl-3.5.1"
+            tagName = "openssl-4.0.1"
             useGit = false
             configureOptions = OpensslExtension.smallConfigureOptions
             buildSpecificOptions = OpensslExtension.buildOptionsMap
         }
     }
 """.trimIndent()
-        buildFile.appendText(ktsText)
+        Files.writeString(buildFile, ktsText)
 
         val result = gradleRunner
-            .withArguments("sqlcipherBuildAll", "--stacktrace", "--warning-mode", "all")
+            //.withArguments("sqlcipherBuildAll", "--stacktrace", "--warning-mode", "all")
             //.withArguments("sqlcipherBuildmacosArm64", "--stacktrace", "--warning-mode", "all")
             //.withArguments("opensslBuildiosX64", "--stacktrace", "--info", "-Dorg.gradle.debug=true", "--warning-mode", "all")
-                //.withArguments("opensslBuildmingw64", "--stacktrace")
-                //.withArguments("sqlcipherBuildvStudio64", "--stacktrace", "-Dorg.gradle.debug=true")
-                //.withArguments("sqlcipherBuildmingwX64", "--stacktrace")
-                //.withArguments("sqlcipherBuildandroidArm64", "--stacktrace")
-                //.withArguments("sqlcipherBuildandroidX64", "--stacktrace")
-                //.withArguments("sqlcipherBuildAll", "--stacktrace", "--warning-mode", "all")
-                .build()
+            //.withArguments("opensslBuildmingw64", "--stacktrace")
+            //.withArguments("sqlcipherBuildvStudio64", "--stacktrace", "-Dorg.gradle.debug=true")
+            //.withArguments("sqlcipherBuildmingwX64", "--stacktrace")
+            .withArguments("sqlcipherBuildandroidArm64", "--stacktrace", "--warning-mode", "all")
+            //.withArguments("sqlcipherBuildandroidX64", "--stacktrace")
+            //.withArguments("sqlcipherBuildAll", "--stacktrace", "--warning-mode", "all")
+            .build()
         println(result.output)
     }
 }

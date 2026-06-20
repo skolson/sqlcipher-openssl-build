@@ -6,7 +6,7 @@ import java.io.File
 
 /**
  * Android NDK using ndk-build. May end up refactoring this to be an extension or part of one in the config DSL.
- * Currently it is just an android and ndk-build specific helper.
+ * Currently, it is just an android and ndk-build specific helper.
  */
 class SqlCipherAndroid(
         private val runner:Runner,

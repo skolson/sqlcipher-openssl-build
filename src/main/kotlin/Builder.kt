@@ -118,6 +118,9 @@ class Runner(
         return Logger.textLines(stdout)
     }
 
+    fun cleanTargets(targetDir: File, patterns: List<String> = listOf()) {
+
+    }
     fun copyResults(srcDir: File, targetDir: File, patterns: List<String> = listOf()) {
         target.copy { copySpec ->
             copySpec.from(srcDir) {
